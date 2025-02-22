@@ -1,3 +1,3 @@
 # BioLaySummarization
 
-Competition: https://biolaysumm.org/#eval
+Prompt: https://biolaysumm.org
