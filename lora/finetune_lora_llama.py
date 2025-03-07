@@ -113,9 +113,10 @@ def format_prompt(sample):
 
 # Apply the function to the dataset
 
-test_train = dataset["train"].select(range(20))  # First 9 samples
-test_val = dataset["validation"].select(range(20))  # First 9 validation samples
-
+#test_train = dataset["train"].select(range(50))  # First n samples
+#test_val = dataset["validation"].select(range(50))  # First n validation samples
+test_train =dataset["train"]
+test_val=dataset["validation"]
 
 formatted_train = test_train.map(format_prompt, remove_columns=dataset["train"].column_names)
 formatted_val = test_val.map(format_prompt, remove_columns=dataset["validation"].column_names)
