@@ -5,6 +5,7 @@ attrs==25.1.0
 certifi==2025.1.31
 charset-normalizer==3.4.1
 datasets==3.3.2
+deepeval==2.5.2
 dill==0.3.8
 filelock==3.17.0
 frozenlist==1.5.0
@@ -15,6 +16,7 @@ Jinja2==3.1.5
 lightning==2.5.0.post0
 lightning-utilities==0.12.0
 MarkupSafe==3.0.2
+matplotlib==3.10.1
 mpmath==1.3.0
 multidict==6.1.0
 multiprocess==0.70.16
