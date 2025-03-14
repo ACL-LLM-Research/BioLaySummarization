@@ -14,6 +14,7 @@ from transformers import (
 from peft import LoraConfig, get_peft_model, TaskType,PeftModel
 import matplotlib.pyplot as plt
 import pandas as pd
+from huggingface_hub import login
 #from torch.amp import GradScaler
 
 #scaler = GradScaler("cuda")
@@ -23,11 +24,11 @@ import pandas as pd
 def format_prompt(sample):
     prompt = f"""
     [SYSTEM]  
-    You are a skilled science communicator. Your task is to generate a clear, concise summary of biomedical research articles for a general audience.
-
+    You are a skilled science communicator. Your task is to generate a plain-language summary of biomedical research articles, making them accessible to a general audience without specialized knowledge.
+    
     [USER]  
-    Generate a lay summary based on the following title and abstract.
-
+    Generate a plain-language summary based on the following title and abstract, ensuring clarity and accessibility to a non-expert audience.
+    
     Title: {sample['title']}  
     Abstract: {sample['abstract']}  
 
@@ -144,134 +145,131 @@ class Config:
     lora_bias: str = "none"
 
 
+if __name__ == "__main__":
+    config = Config()
+    training_args = TrainingArguments(
+        output_dir="output",
+        overwrite_output_dir=True,
+        report_to="none",
+        num_train_epochs=config.n_epochs,
+        per_device_train_batch_size=config.per_device_train_batch_size,
+        gradient_accumulation_steps=config.gradient_accumulation_steps,
+        per_device_eval_batch_size=config.per_device_eval_batch_size,
+        logging_steps=10,
+        eval_strategy="steps",
+        eval_steps=1000,
+        save_strategy="steps",
+        save_steps=1000,
+        save_total_limit=20,
+        optim=config.optim_type,
+        fp16=True,
+        #bf16=True,# for A100 and H100
+        learning_rate=config.lr,
+        #warmup_steps=config.warmup_steps,
+        #ddp_find_unused_parameters=False,
+        #gradient_checkpointing=True,
+        logging_dir="./logs",
+        label_names=["labels"]
+    )
+
+    lora_config = LoraConfig(
+        r=config.lora_r,  # Higher rank for better adaptation
+        lora_alpha=config.lora_alpha,  # Scaling factor, higher for better adaptation
+        target_modules=["q_proj", "k_proj", "v_proj", "o_proj"],  # Apply LoRA to all attention layers
+        layers_to_transform=[i for i in range(32) if i >= config.freeze_layers],  # Apply LoRA to higher layers (assuming 80-layer model)
+        lora_dropout=config.lora_dropout,  # Higher dropout to prevent overfitting
+        bias=config.lora_bias,  # No additional biases
+        task_type=TaskType.CAUSAL_LM,  # Task type for text generation
+    )
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    model = AutoModelForCausalLM.from_pretrained(
+        config.checkpoint,
+        #device_map="auto",
+    ).to(device)
+    model.config.rope_scaling = {"type": "linear", "factor": 2.0}
+    model.config.use_cache = False
+    model = get_peft_model(model, lora_config)
+
+    tokenizer = AutoTokenizer.from_pretrained(config.checkpoint)
+    tokenizer.pad_token = tokenizer.eos_token
+    tokenizer.padding_side = "right" 
+
+
+    ##load data
+    dataset = load_dataset(config.dataset_name)
+    #dataset['train'][0]['article']
+    #dataset['train'][0]['summary']
+
+
+    dataset = dataset.map(extract_abstract)
+    dataset.column_names
+
+    if config.dataset_name == "BioLaySumm/BioLaySumm2025-PLOS":
+        plos_drop_dict={'train':[[725, 1939, 4226, 4842, 5991, 6310, 12050, 13498, 14104, 14199, 18921, 21808, 22922]],'validation':[],'test':[]} # drop due to inccorrect abstract
+        dataset = drop_indices(dataset, plos_drop_dict)
+    len_abstract()
+
+
+    #test_train = dataset["train"].select(range(50))  # First n samples
+    #test_val = dataset["validation"].select(range(50))  # First n validation samples
+    train_set =dataset["train"]
+    val_set=dataset["validation"]
+
+    formatted_train = train_set.map(format_prompt, remove_columns=dataset["train"].column_names)
+    formatted_val = val_set.map(format_prompt, remove_columns=dataset["validation"].column_names)
 
 
 
+    tokenized_train = formatted_train.map(tokenize_data, batched=True, remove_columns=["input_text"])
+    tokenized_val = formatted_val.map(tokenize_data, batched=True, remove_columns=["input_text"])
 
 
+    # Ensure the format is correct for training
+    #tokenized_train.set_format("torch", device="cuda", columns=["input_ids", "attention_mask"])
+    #tokenized_val.set_format("torch", device="cuda", columns=["input_ids", "attention_mask"])
 
-config = Config()
-
-training_args = TrainingArguments(
-    output_dir="output",
-    overwrite_output_dir=True,
-    report_to="none",
-    num_train_epochs=config.n_epochs,
-    per_device_train_batch_size=config.per_device_train_batch_size,
-    gradient_accumulation_steps=config.gradient_accumulation_steps,
-    per_device_eval_batch_size=config.per_device_eval_batch_size,
-    logging_steps=10,
-    eval_strategy="steps",
-    eval_steps=1000,
-    save_strategy="steps",
-    save_steps=1000,
-    save_total_limit=20,
-    optim=config.optim_type,
-    fp16=True,
-    #bf16=True,# for A100 and H100
-    learning_rate=config.lr,
-    #warmup_steps=config.warmup_steps,
-    #ddp_find_unused_parameters=False,
-    #gradient_checkpointing=True,
-    logging_dir="./logs",
-    label_names=["labels"]
-)
-
-lora_config = LoraConfig(
-    r=config.lora_r,  # Higher rank for better adaptation
-    lora_alpha=config.lora_alpha,  # Scaling factor, higher for better adaptation
-    target_modules=["q_proj", "k_proj", "v_proj", "o_proj"],  # Apply LoRA to all attention layers
-    layers_to_transform=[i for i in range(32) if i >= config.freeze_layers],  # Apply LoRA to higher layers (assuming 80-layer model)
-    lora_dropout=config.lora_dropout,  # Higher dropout to prevent overfitting
-    bias=config.lora_bias,  # No additional biases
-    task_type=TaskType.CAUSAL_LM,  # Task type for text generation
-)
-
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-model = AutoModelForCausalLM.from_pretrained(
-    config.checkpoint,
-    #device_map="auto",
-).to(device)
-model.config.rope_scaling = {"type": "linear", "factor": 2.0}
-model.config.use_cache = False
-model = get_peft_model(model, lora_config)
-
-tokenizer = AutoTokenizer.from_pretrained(config.checkpoint)
-tokenizer.pad_token = tokenizer.eos_token
-tokenizer.padding_side = "right" 
+    tokenized_train.set_format(type="torch", columns=["input_ids", "attention_mask", "labels"])
+    tokenized_val.set_format(type="torch", columns=["input_ids", "attention_mask", "labels"])
 
 
-##load data
-dataset = load_dataset(config.dataset_name)
-#dataset['train'][0]['article']
-#dataset['train'][0]['summary']
+    '''
+    class DataCollatorForSeq2SeqWithDevice(DataCollatorForSeq2Seq):
+        def __call__(self, features):
+            batch = super().__call__(features)
+            return {k: v.to(device) for k, v in batch.items()}  # Move batch to GPU
+
+    data_collator = DataCollatorForSeq2SeqWithDevice(tokenizer, padding=True)
+    '''
+    data_collator = DataCollatorForSeq2Seq(tokenizer, padding=True) # even out batch length
 
 
-dataset = dataset.map(extract_abstract)
-dataset.column_names
+    trainer = Trainer(
+        model=model,
+        args=training_args,
+        train_dataset=tokenized_train,
+        eval_dataset=tokenized_val,
+        data_collator=data_collator,
+    )
 
-if config.dataset_name == "BioLaySumm/BioLaySumm2025-PLOS":
-    plos_drop_dict={'train':[[725, 1939, 4226, 4842, 5991, 6310, 12050, 13498, 14104, 14199, 18921, 21808, 22922]],'validation':[],'test':[]} # drop due to inccorrect abstract
-    dataset = drop_indices(dataset, plos_drop_dict)
-len_abstract()
+    #torch.cuda.reset_peak_memory_stats()
 
-
-#test_train = dataset["train"].select(range(50))  # First n samples
-#test_val = dataset["validation"].select(range(50))  # First n validation samples
-test_train =dataset["train"]
-test_val=dataset["validation"]
-
-formatted_train = test_train.map(format_prompt, remove_columns=dataset["train"].column_names)
-formatted_val = test_val.map(format_prompt, remove_columns=dataset["validation"].column_names)
+    history = trainer.train()
+    plot_training_and_validation_loss(history)
 
 
-
-tokenized_train = formatted_train.map(tokenize_data, batched=True, remove_columns=["input_text"])
-tokenized_val = formatted_val.map(tokenize_data, batched=True, remove_columns=["input_text"])
-
-
-# Ensure the format is correct for training
-#tokenized_train.set_format("torch", device="cuda", columns=["input_ids", "attention_mask"])
-#tokenized_val.set_format("torch", device="cuda", columns=["input_ids", "attention_mask"])
-
-tokenized_train.set_format(type="torch", columns=["input_ids", "attention_mask", "labels"])
-tokenized_val.set_format(type="torch", columns=["input_ids", "attention_mask", "labels"])
+    #trainer.args.num_train_epochs += 2  # Increase epoch count
+    #trainer.train(resume_from_checkpoint=True)  # Resume training
 
 
-'''
-class DataCollatorForSeq2SeqWithDevice(DataCollatorForSeq2Seq):
-    def __call__(self, features):
-        batch = super().__call__(features)
-        return {k: v.to(device) for k, v in batch.items()}  # Move batch to GPU
+    #peak_memory = torch.cuda.max_memory_allocated() / (1024 ** 3)  # Convert bytes to GB
+    #print(f"Peak GPU memory usage: {peak_memory:.2f} GB")
 
-data_collator = DataCollatorForSeq2SeqWithDevice(tokenizer, padding=True)
-'''
-data_collator = DataCollatorForSeq2Seq(tokenizer, padding=True) # even out batch length
+    login(token="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")
+    model.push_to_hub("linf545/%s"%(config.experiment_name))
 
-
-trainer = Trainer(
-    model=model,
-    args=training_args,
-    train_dataset=tokenized_train,
-    eval_dataset=tokenized_val,
-    data_collator=data_collator,
-)
-
-#torch.cuda.reset_peak_memory_stats()
-
-history = trainer.train()
-plot_training_and_validation_loss(history)
+    #test loading the model
+    #model = PeftModel.from_pretrained(config.checkpoint, "linf545/%s"%(config.experiment_name))
 
 
-#trainer.args.num_train_epochs += 2  # Increase epoch count
-#trainer.train(resume_from_checkpoint=True)  # Resume training
-
-model.push_to_hub("linf545/%s"%(config.experiment_name))
-
-#peak_memory = torch.cuda.max_memory_allocated() / (1024 ** 3)  # Convert bytes to GB
-#print(f"Peak GPU memory usage: {peak_memory:.2f} GB")
-
-
-#test loading the model
-model = PeftModel.from_pretrained(config.checkpoint, "linf545/%s"%(config.experiment_name))
