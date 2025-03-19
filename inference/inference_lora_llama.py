@@ -1,5 +1,5 @@
 import sys
-sys.path.append('../lora')
+sys.path.append('./lora')
 from finetune_lora_llama_abstract import extract_abstract, drop_indices,load_dataset
 from peft import PeftModel
 from transformers import AutoTokenizer, AutoModelForCausalLM, AutoConfig
@@ -17,11 +17,11 @@ class Config:
     per_device_train_batch_size: int = 1
     gradient_accumulation_steps: int = 4  
     per_device_eval_batch_size: int = 2
-    n_epochs: int = 3
+    n_epochs: int = 2
     freeze_layers: int = 20  # other option 16,20,24
-    lr: float = 2e-4
+    lr: float = 2e-5
     #warmup_steps: int = 20
-    lora_r: int = 16
+    lora_r: int = 8
     lora_alpha: float = lora_r * 2
     lora_dropout: float = 0.1
     lora_bias: str = "none"
