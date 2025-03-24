@@ -36,7 +36,7 @@ def format_inference_prompt(sample):
     Title: {sample['title']}
     Abstract: {sample['abstract']}
 
-    Provide a **formal summary** of the article in 200-400 words. **Do not include explanations, self-reflections, or additional notes.** Keep the response strictly to the summary.
+    Provide a **formal summary** of the article in 1000-2000 words. **Do not include explanations, self-reflections, or additional notes.** Keep the response strictly to the summary.
     <|start_header_id|>assistant<|end_header_id|>
     """
     return {
@@ -47,7 +47,7 @@ def generate_output(sample):
     inputs = tokenizer(sample["input_text"], return_tensors="pt",  truncation=True,max_length=1024)
     input_ids = inputs.input_ids.to(model.device)
     attention_mask = inputs.attention_mask.to(model.device) 
-    output_ids = model.generate(input_ids, attention_mask=attention_mask, max_new_tokens=400,do_sample=False,
+    output_ids = model.generate(input_ids, attention_mask=attention_mask, max_new_tokens=3000,do_sample=False,
                                 temperature=None,top_p=None, pad_token_id=tokenizer.eos_token_id)
     sample["summary"] = tokenizer.decode(output_ids[0], skip_special_tokens=True)
     return sample
