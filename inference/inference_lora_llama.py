@@ -19,7 +19,7 @@ class Config:
     per_device_eval_batch_size: int = 2
     n_epochs: int = 2
     freeze_layers: int = 20  # other option 16,20,24
-    lr: float = 2e-5
+    lr: float = 1e-5
     #warmup_steps: int = 20
     lora_r: int = 8
     lora_alpha: float = lora_r * 2

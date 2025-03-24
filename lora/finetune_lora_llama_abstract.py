@@ -31,7 +31,7 @@ def format_prompt(sample):
     Title: {sample['title']}  
     Abstract: {sample['abstract']}  
 
-    Provide a **formal summary** of the article in 200-400 words. **Do not include explanations, self-reflections, or additional notes.** Keep the response strictly to the summary.
+    Provide a **formal summary** of the article in 1000-2000 words. **Do not include explanations, self-reflections, or additional notes.** Keep the response strictly to the summary.
     <|start_header_id|>assistant<|end_header_id|>
     {sample['summary']}
     """
@@ -126,7 +126,7 @@ def plot_training_and_validation_loss(history):
 class Config:
     output_dir: str = "output"
     checkpoint: str = "meta-llama/Meta-Llama-3.1-8B-Instruct"  # Update to LLaMA 3 checkpoint
-    experiment_name: str = "LLaMA_lora_PLOS_0312"
+    experiment_name: str = "LLaMA_lora_lr1e5_epo3_rank16_PLOS_0324"
     dataset_name: str = "BioLaySumm/BioLaySumm2025-PLOS"
     max_length: int = 2048
     optim_type: str = "adamw_torch"
@@ -135,7 +135,7 @@ class Config:
     per_device_eval_batch_size: int = 2
     n_epochs: int = 3
     freeze_layers: int = 20  # other option 16,20,24
-    lr: float = 2e-4
+    lr: float = 1e-5
     #warmup_steps: int = 20
     lora_r: int = 16
     lora_alpha: float = lora_r * 2
