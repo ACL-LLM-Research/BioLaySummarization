@@ -96,9 +96,14 @@ def generate_output(sample):
     inputs = tokenizer(sample["input_text"], return_tensors="pt",  truncation=True,max_length=2048)
     input_ids = inputs.input_ids.to(model.device)
     attention_mask = inputs.attention_mask.to(model.device) 
-    output_ids = model.generate(input_ids, attention_mask=attention_mask, max_new_tokens=3000,min_length=750,num_beams=4,do_sample=False,
+    output_ids = model.generate(input_ids, attention_mask=attention_mask, max_new_tokens=3000,min_length=1000,num_beams=4,do_sample=False,
                                 temperature=None,top_p=None, pad_token_id=tokenizer.eos_token_id)
-    sample["summary"] = tokenizer.decode(output_ids[0], skip_special_tokens=True)
+    decoded = tokenizer.decode(output_ids[0], skip_special_tokens=True)
+    if "assistant\n" in decoded:
+        summary = decoded.split("assistant\n", 1)[-1].strip()
+    else:
+        summary = decoded.strip()
+    sample["summary"] = summary
     return sample
 
 
