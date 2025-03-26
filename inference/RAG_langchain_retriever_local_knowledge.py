@@ -141,8 +141,8 @@ if __name__ == "__main__":
 
     test_case = formatted_val.select(range(5))
     result=test_case.map(generate_output)
-    result["summary"]
+    #result["summary"]
 
-    generated_val = formatted_val.map(generate_output)
-
-    generated_val.to_parquet("./output/generated_summaries/RAG_local_knowledge/plos_val_summaries.parquet")
+    result.to_parquet("./output/generated_summaries/RAG_local_knowledge/test_summaries.parquet")
+    #generated_val = formatted_val.map(generate_output)
+    #generated_val.to_parquet("./output/generated_summaries/RAG_local_knowledge/plos_val_summaries.parquet")
