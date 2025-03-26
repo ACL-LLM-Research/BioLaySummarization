@@ -124,8 +124,8 @@ if __name__ == "__main__":
 
 
     embedder = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
-    chunked_dataset = chunked_dataset.map(retrieve_relevant_chunks)
-    #chunked_dataset["validation"] = chunked_dataset["validation"].map(retrieve_relevant_chunks)
+    #chunked_dataset = chunked_dataset.map(retrieve_relevant_chunks)
+    chunked_dataset["validation"] = chunked_dataset["validation"].map(retrieve_relevant_chunks)
 
     val_set=chunked_dataset["validation"]
 
