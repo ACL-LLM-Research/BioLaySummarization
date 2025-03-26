@@ -84,7 +84,9 @@ def rag_format_inference_prompt(sample):
     Supporting Text:
     {sample['retrieved_context']}
 
-    Provide a **formal summary** of the article in 1000-2000 words. **Do not include explanations, self-reflections, or additional notes.** Keep the response strictly to the summary.
+    Provide a **formal summary** of the article in 1000-2000 words. **Do not include explanations, self-reflections, preamble, extra formatting, or additional notes.** 
+    Keep the response strictly to the summary. The output should begin directly with the summary text itself.
+
     <|start_header_id|>assistant<|end_header_id|>
     """
     return {
