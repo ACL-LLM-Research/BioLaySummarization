@@ -1,31 +1,20 @@
 import sys
-sys.path.append('../lora')
+sys.path.append('./lora')
 from finetune_lora_llama_abstract import extract_abstract, drop_indices,load_dataset
 from peft import PeftModel
 from transformers import AutoTokenizer, AutoModelForCausalLM, AutoConfig
 import pandas as pd
 
 
-
 class Config:
     output_dir: str = "output"
     checkpoint: str = "meta-llama/Meta-Llama-3.1-8B-Instruct"  # Update to LLaMA 3 checkpoint
-    experiment_name: str = "LLaMA_lora_PLOS_0312"
+    experiment_name: str = "LLaMA_base_PLOS_0312"
     dataset_name: str = "BioLaySumm/BioLaySumm2025-PLOS"
-    max_length: int = 2048
-    optim_type: str = "adamw_torch"
-    per_device_train_batch_size: int = 1
-    gradient_accumulation_steps: int = 4  
-    per_device_eval_batch_size: int = 2
-    n_epochs: int = 3
-    freeze_layers: int = 20  # other option 16,20,24
-    lr: float = 2e-4
-    #warmup_steps: int = 20
-    lora_r: int = 16
-    lora_alpha: float = lora_r * 2
-    lora_dropout: float = 0.1
-    lora_bias: str = "none"
-
+    max_new_tokens: int= 3000
+    min_length: int= 500
+    num_beams: int= 4
+    input_max_length: int = 1024
 
 def format_inference_prompt(sample):
     prompt = f"""<|begin_of_text|><|start_header_id|>system<|end_header_id|> 
@@ -36,7 +25,8 @@ def format_inference_prompt(sample):
     Title: {sample['title']}
     Abstract: {sample['abstract']}
 
-    Provide a **formal summary** of the article in 200-400 words. **Do not include explanations, self-reflections, or additional notes.** Keep the response strictly to the summary.
+    Provide a **formal summary** of the article in 500-2000 words. **Do not include explanations, self-reflections, or additional notes.** 
+    Keep the response strictly to the summary.The output should begin directly with the summary text itself.
     <|start_header_id|>assistant<|end_header_id|>
     """
     return {
@@ -44,11 +34,17 @@ def format_inference_prompt(sample):
     }
 
 def generate_output(sample):
-    inputs = tokenizer(sample["input_text"], return_tensors="pt",  truncation=True,max_length=1024)
+    inputs = tokenizer(sample["input_text"], return_tensors="pt",  truncation=True,max_length=config.input_max_length)
     input_ids = inputs.input_ids.to(model.device)
     attention_mask = inputs.attention_mask.to(model.device) 
-    output_ids = model.generate(input_ids, attention_mask=attention_mask, max_new_tokens=400,do_sample=False, pad_token_id=tokenizer.eos_token_id)
-    sample["summary"] = tokenizer.decode(output_ids[0], skip_special_tokens=True)
+    output_ids = model.generate(input_ids, attention_mask=attention_mask, max_new_tokens=config.max_new_tokens,min_length=config.min_length,num_beams=config.num_beams,
+                                do_sample=False, temperature=None,top_p=None,pad_token_id=tokenizer.eos_token_id)
+    decoded = tokenizer.decode(output_ids[0], skip_special_tokens=True)
+    if "assistant\n" in decoded:
+        summary = decoded.split("assistant\n", 1)[-1].strip()
+    else:
+        summary = decoded.strip()
+    sample["summary"] = summary
     return sample
 
 
@@ -59,8 +55,8 @@ config = Config()
 
 autoconfig = AutoConfig.from_pretrained(config.checkpoint)
 autoconfig .rope_scaling = {"type": "linear", "factor": 2.0}  
-model = AutoModelForCausalLM.from_pretrained("meta-llama/Meta-Llama-3.1-8B-Instruct", config=autoconfig, device_map="cuda")
-tokenizer = AutoTokenizer.from_pretrained("meta-llama/Meta-Llama-3.1-8B-Instruct")
+model = AutoModelForCausalLM.from_pretrained(config.checkpoint, config=autoconfig, device_map="cuda")
+tokenizer = AutoTokenizer.from_pretrained(config.checkpoint)
 tokenizer.pad_token = tokenizer.eos_token
 
 dataset = load_dataset(config.dataset_name)
@@ -83,11 +79,11 @@ formatted_val = val_set.map(format_inference_prompt, remove_columns=dataset["val
 #tokenized_test = formatted_test.map(tokenizer, batched=True, remove_columns=["input_text"])
 
 
-#test_case = formatted_val.select(range(2))
+#test_case = formatted_val.select(range(5))
 #result=test_case.map(generate_output)
-
+#generated_val = result
 generated_val = formatted_val.map(generate_output)
 
 
-generated_val.to_parquet("./output/test_summaries.parquet")
+generated_val.to_parquet("./output/generated_summaries/LLaMA_base/val_summaries.parquet")
 #test= load_dataset("parquet", data_files="./output/test_summaries.parquet")
