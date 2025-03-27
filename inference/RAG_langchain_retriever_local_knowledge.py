@@ -18,7 +18,10 @@ class Config:
     checkpoint: str = "meta-llama/Meta-Llama-3.1-8B-Instruct"  # Update to LLaMA 3 checkpoint
     experiment_name: str = "RAG_main_text_general_retraiever"
     dataset_name: str = "BioLaySumm/BioLaySumm2025-PLOS"
-    max_length: int = 2048
+    max_new_tokens: int= 3000
+    min_length: int= 500
+    num_beams: int= 4
+    input_max_length: int = 2048
 
 
 def extract_abstract(example):
@@ -95,10 +98,11 @@ def rag_format_inference_prompt(sample):
 
 
 def generate_output(sample):
-    inputs = tokenizer(sample["input_text"], return_tensors="pt",  truncation=True,max_length=2048)
+    inputs = tokenizer(sample["input_text"], return_tensors="pt",  truncation=True,max_length=config.input_max_length)
     input_ids = inputs.input_ids.to(model.device)
     attention_mask = inputs.attention_mask.to(model.device) 
-    output_ids = model.generate(input_ids, attention_mask=attention_mask, max_new_tokens=3000,min_length=1000,num_beams=4,do_sample=False,
+    output_ids = model.generate(input_ids, attention_mask=attention_mask, max_new_tokens=config.max_new_tokens,min_length=config.min_length,
+                                num_beams=config.num_beams,do_sample=False,
                                 temperature=None,top_p=None, pad_token_id=tokenizer.eos_token_id)
     decoded = tokenizer.decode(output_ids[0], skip_special_tokens=True)
     if "assistant\n" in decoded:
@@ -146,10 +150,10 @@ if __name__ == "__main__":
     formatted_val = val_set.map(rag_format_inference_prompt, remove_columns=dataset["validation"].column_names)
     #formatted_test = test_set.map(format_prompt, remove_columns=dataset["test"].column_names)
 
-    test_case = formatted_val.select(range(5))
-    result=test_case.map(generate_output)
+    #test_case = formatted_val.select(range(5))
+    #result=test_case.map(generate_output)
     #result["summary"]
-
-    result.to_parquet("./output/generated_summaries/RAG_local_knowledge/test_summaries.parquet")
-    #generated_val = formatted_val.map(generate_output)
-    #generated_val.to_parquet("./output/generated_summaries/RAG_local_knowledge/plos_val_summaries.parquet")
+    #result.to_parquet("./output/generated_summaries/llama_RAG_local_knowledge/val_summaries.parquet")
+    
+    generated_val = formatted_val.map(generate_output)
+    generated_val.to_parquet("./output/generated_summaries/llama_RAG_local_knowledge/%s_val_summaries.parquet"%(config.dataset_name.split('-')[1]))

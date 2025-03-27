@@ -14,7 +14,7 @@ class Config:
     max_new_tokens: int= 3000
     min_length: int= 500
     num_beams: int= 4
-    input_max_length: int = 1024
+    input_max_length: int = 2048
 
 def format_inference_prompt(sample):
     prompt = f"""<|begin_of_text|><|start_header_id|>system<|end_header_id|> 
@@ -25,7 +25,7 @@ def format_inference_prompt(sample):
     Title: {sample['title']}
     Abstract: {sample['abstract']}
 
-    Provide a **formal summary** of the article in 500-2000 words. **Do not include explanations, self-reflections, or additional notes.** 
+    Provide a **formal summary** of the article in 1000-2000 words. **Do not include explanations, self-reflections, or additional notes.** 
     Keep the response strictly to the summary.The output should begin directly with the summary text itself.
     <|start_header_id|>assistant<|end_header_id|>
     """
@@ -83,7 +83,5 @@ formatted_val = val_set.map(format_inference_prompt, remove_columns=dataset["val
 #result=test_case.map(generate_output)
 #generated_val = result
 generated_val = formatted_val.map(generate_output)
-
-
-generated_val.to_parquet("./output/generated_summaries/LLaMA_base/val_summaries.parquet")
+generated_val.to_parquet("./output/generated_summaries/LLaMA_base/%s_val_summaries.parquet"%(config.dataset_name.split('-')[1]))
 #test= load_dataset("parquet", data_files="./output/test_summaries.parquet")
