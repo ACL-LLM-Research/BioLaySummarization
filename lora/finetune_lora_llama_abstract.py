@@ -21,6 +21,27 @@ from huggingface_hub import login
 #source biolaysumm/bin/activate
 
 
+class Config:
+    output_dir: str = "output"
+    checkpoint: str = "meta-llama/Meta-Llama-3.1-8B-Instruct"  # Update to LLaMA 3 checkpoint
+    experiment_name: str = "LLaMA_lora_lr1e5_epo3_rank8_PLOS_0326"
+    dataset_name: str = "BioLaySumm/BioLaySumm2025-PLOS"
+    max_length: int = 2048
+    optim_type: str = "adamw_torch"
+    per_device_train_batch_size: int = 1
+    gradient_accumulation_steps: int = 4  
+    per_device_eval_batch_size: int = 2
+    n_epochs: int = 3
+    freeze_layers: int = 20  # other option 16,20,24
+    lr: float = 1e-5
+    #warmup_steps: int = 20
+    lora_r: int = 8
+    lora_alpha: float = lora_r * 2
+    lora_dropout: float = 0.1
+    lora_bias: str = "none"
+
+
+
 def format_prompt(sample):
     prompt = f"""
     <|begin_of_text|><|start_header_id|>system<|end_header_id|> 
@@ -31,7 +52,8 @@ def format_prompt(sample):
     Title: {sample['title']}  
     Abstract: {sample['abstract']}  
 
-    Provide a **formal summary** of the article in 1000-2000 words. **Do not include explanations, self-reflections, or additional notes.** Keep the response strictly to the summary.
+    Provide a **formal summary** of the article in 1000-2000 words. **Do not include explanations, self-reflections, or additional notes.** 
+    Keep the response strictly to the summary.The output should begin directly with the summary text itself.
     <|start_header_id|>assistant<|end_header_id|>
     {sample['summary']}
     """
@@ -123,26 +145,6 @@ def plot_training_and_validation_loss(history):
 
 
 
-class Config:
-    output_dir: str = "output"
-    checkpoint: str = "meta-llama/Meta-Llama-3.1-8B-Instruct"  # Update to LLaMA 3 checkpoint
-    experiment_name: str = "LLaMA_lora_lr1e5_epo3_rank16_PLOS_0324"
-    dataset_name: str = "BioLaySumm/BioLaySumm2025-PLOS"
-    max_length: int = 2048
-    optim_type: str = "adamw_torch"
-    per_device_train_batch_size: int = 1
-    gradient_accumulation_steps: int = 4  
-    per_device_eval_batch_size: int = 2
-    n_epochs: int = 3
-    freeze_layers: int = 20  # other option 16,20,24
-    lr: float = 1e-5
-    #warmup_steps: int = 20
-    lora_r: int = 16
-    lora_alpha: float = lora_r * 2
-    lora_dropout: float = 0.1
-    lora_bias: str = "none"
-
-
 if __name__ == "__main__":
     config = Config()
     training_args = TrainingArguments(
@@ -158,7 +160,7 @@ if __name__ == "__main__":
         eval_steps=1000,
         save_strategy="steps",
         save_steps=1000,
-        save_total_limit=20,
+        save_total_limit=10,
         optim=config.optim_type,
         fp16=True,
         #bf16=True,# for A100 and H100
@@ -174,7 +176,7 @@ if __name__ == "__main__":
         r=config.lora_r,  # Higher rank for better adaptation
         lora_alpha=config.lora_alpha,  # Scaling factor, higher for better adaptation
         target_modules=["q_proj", "k_proj", "v_proj", "o_proj"],  # Apply LoRA to all attention layers
-        layers_to_transform=[i for i in range(32) if i >= config.freeze_layers],  # Apply LoRA to higher layers (assuming 80-layer model)
+        layers_to_transform=[i for i in range(32) if i >= config.freeze_layers],  # Apply LoRA to higher layers 
         lora_dropout=config.lora_dropout,  # Higher dropout to prevent overfitting
         bias=config.lora_bias,  # No additional biases
         task_type=TaskType.CAUSAL_LM,  # Task type for text generation
