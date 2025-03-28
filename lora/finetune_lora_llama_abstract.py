@@ -163,6 +163,7 @@ def plot_training_and_validation_loss(history):
 if __name__ == "__main__":
     config = Config()
     config.save("./configfile/finetune_%s_config.json"%(config.experiment_name))  # Save config to a file
+    #config=Config.load("xxxxconfig.json")
     training_args = TrainingArguments(
         output_dir="output",
         overwrite_output_dir=True,

@@ -1,6 +1,5 @@
 
 
-
 import os
 from langchain.embeddings import HuggingFaceEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -31,6 +30,13 @@ class Config:
         with open(path, "r") as f:
             data = json.load(f)
         return Config(**data)
+
+def summary_length():
+    if config.dataset_name == "BioLaySumm/BioLaySumm2025-PLOS":
+        return '100-300 words'
+    if config.dataset_name == "BioLaySumm/BioLaySumm2025-eLife":
+        return '200-600 words'
+
 
 def extract_abstract(example):
     example["abstract"] = example["article"].split("\n")[0]  # Extract text before first newline, which is the abstract
@@ -95,7 +101,7 @@ def rag_format_inference_prompt(sample):
     Supporting Text:
     {sample['retrieved_context']}
 
-    Provide a **formal summary** of the article in 1000-2000 words. **Do not include explanations, self-reflections, preamble, extra formatting, or additional notes.** 
+    Provide a **formal summary** of the article in {summary_word_len}. **Do not include explanations, self-reflections, preamble, extra formatting, or additional notes.** 
     Keep the response strictly to the summary. The output should begin directly with the summary text itself.
 
     <|start_header_id|>assistant<|end_header_id|>
@@ -155,7 +161,7 @@ if __name__ == "__main__":
     tokenizer = AutoTokenizer.from_pretrained(config.checkpoint)
     tokenizer.pad_token = tokenizer.eos_token
 
-
+    summary_word_len = summary_length()
     formatted_val = val_set.map(rag_format_inference_prompt, remove_columns=dataset["validation"].column_names)
     #formatted_test = test_set.map(format_prompt, remove_columns=dataset["test"].column_names)
 

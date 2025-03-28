@@ -30,7 +30,7 @@ from dataclasses import dataclass, asdict
 class Config:
     output_dir: str = "output"
     checkpoint: str = "meta-llama/Meta-Llama-3.1-8B-Instruct"  # Update to LLaMA 3 checkpoint
-    experiment_name: str = "LLaMA_RAG_lora_lr1e5_epo3_rank8_PLOS_0328"
+    experiment_name: str = "LLaMA_RAG_lora_lr1e5_epo2_rank8_PLOS_0328"
     dataset_name: str = "BioLaySumm/BioLaySumm2025-PLOS"
     max_length: int = 2048
     optim_type: str = "adamw_torch"
