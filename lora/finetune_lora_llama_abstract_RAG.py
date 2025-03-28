@@ -15,9 +15,10 @@ from peft import LoraConfig, get_peft_model, TaskType,PeftModel
 import matplotlib.pyplot as plt
 import pandas as pd
 from huggingface_hub import login
-from langchain.embeddings import HuggingFaceEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.vectorstores import FAISS
+from langchain.embeddings.huggingface import HuggingFaceEmbeddings
+from langchain_community.vectorstores.faiss import FAISS
+
 
 #from torch.amp import GradScaler
 #scaler = GradScaler("cuda")
