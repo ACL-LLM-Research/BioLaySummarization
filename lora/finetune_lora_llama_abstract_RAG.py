@@ -16,7 +16,8 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from huggingface_hub import login
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.embeddings.huggingface import HuggingFaceEmbeddings
+#from langchain.embeddings.huggingface import HuggingFaceEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores.faiss import FAISS
 
 
