@@ -115,6 +115,7 @@ def generate_output(sample):
 
 if __name__ == "__main__":
     config = Config()
+    config.save("./configfile/inference_%s_config.json"%(config.experiment_name))
     dataset = load_dataset(config.dataset_name)
     dataset = dataset.map(extract_abstract)
     dataset = dataset.map(extract_main_text)

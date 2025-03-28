@@ -39,7 +39,6 @@ class Config:
     n_epochs: int = 2
     freeze_layers: int = 20  # other option 16,20,24
     lr: float = 1e-5
-    #warmup_steps: int = 20
     lora_r: int = 8
     lora_alpha: float = lora_r * 2
     lora_dropout: float = 0.1
@@ -193,6 +192,7 @@ def retrieve_relevant_chunks(example, k=5):
 
 if __name__ == "__main__":
     config = Config()
+    config.save("./configfile/finetune_%s_config.json"%(config.experiment_name)) 
     training_args = TrainingArguments(
         output_dir="output",
         overwrite_output_dir=True,

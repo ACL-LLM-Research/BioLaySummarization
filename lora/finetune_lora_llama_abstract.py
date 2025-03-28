@@ -52,7 +52,7 @@ def format_prompt(sample):
     Title: {sample['title']}  
     Abstract: {sample['abstract']}  
 
-    Provide a **formal summary** of the article in 1000-2000 words. **Do not include explanations, self-reflections, or additional notes.** 
+    Provide a **formal summary** of the article in {summary_word_len}. **Do not include explanations, self-reflections, or additional notes.** 
     Keep the response strictly to the summary.The output should begin directly with the summary text itself.
     <|start_header_id|>assistant<|end_header_id|>
     {sample['summary']}
@@ -60,6 +60,12 @@ def format_prompt(sample):
     return {
         "input_text": prompt,  # Model input (including expected output)
     }
+
+def summary_length():
+    if config.dataset_name == "BioLaySumm/BioLaySumm2025-PLOS":
+        return '100-300 words'
+    if config.dataset_name == "BioLaySumm/BioLaySumm2025-eLife":
+        return '200-600 words'
 
 
 def extract_abstract(example):
@@ -141,12 +147,13 @@ def plot_training_and_validation_loss(history):
     plt.savefig('./figures/%s_loss_epoch'%(config.experiment_name))  # Save plot without showing
     plt.close() 
     df = pd.DataFrame(history)
-    df.to_csv(f'./figures/%s_loss_history.csv'%(config.experiment_name), index=False)
+    df.to_csv('./figures/%s_loss_history.csv'%(config.experiment_name), index=False)
 
 
 
 if __name__ == "__main__":
     config = Config()
+    config.save("./configfile/finetune_%s_config.json"%(config.experiment_name))  # Save config to a file
     training_args = TrainingArguments(
         output_dir="output",
         overwrite_output_dir=True,
@@ -221,7 +228,7 @@ if __name__ == "__main__":
     formatted_val = val_set.map(format_prompt, remove_columns=dataset["validation"].column_names)
 
 
-
+    summary_word_len = summary_length()
     tokenized_train = formatted_train.map(tokenize_data, batched=True, remove_columns=["input_text"])
     tokenized_val = formatted_val.map(tokenize_data, batched=True, remove_columns=["input_text"])
 
@@ -229,7 +236,7 @@ if __name__ == "__main__":
     # Ensure the format is correct for training
     #tokenized_train.set_format("torch", device="cuda", columns=["input_ids", "attention_mask"])
     #tokenized_val.set_format("torch", device="cuda", columns=["input_ids", "attention_mask"])
-
+    
     tokenized_train.set_format(type="torch", columns=["input_ids", "attention_mask", "labels"])
     tokenized_val.set_format(type="torch", columns=["input_ids", "attention_mask", "labels"])
 
