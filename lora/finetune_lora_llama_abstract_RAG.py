@@ -19,13 +19,14 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 #from langchain.embeddings.huggingface import HuggingFaceEmbeddings
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores.faiss import FAISS
-
+import json
+from dataclasses import dataclass, asdict
 
 #from torch.amp import GradScaler
 #scaler = GradScaler("cuda")
 #source biolaysumm/bin/activate
 
-
+@dataclass
 class Config:
     output_dir: str = "output"
     checkpoint: str = "meta-llama/Meta-Llama-3.1-8B-Instruct"  # Update to LLaMA 3 checkpoint
@@ -43,6 +44,14 @@ class Config:
     lora_alpha: float = lora_r * 2
     lora_dropout: float = 0.1
     lora_bias: str = "none"
+    def save(self, path: str):
+          with open(path, "w") as f:
+            json.dump(asdict(self), f, indent=4)
+    @staticmethod
+    def load(path: str):
+        with open(path, "r") as f:
+            data = json.load(f)
+        return Config(**data)
 
 
 

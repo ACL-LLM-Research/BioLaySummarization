@@ -7,12 +7,13 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.vectorstores import FAISS
 from datasets import load_dataset,DatasetDict
 from transformers import AutoTokenizer, AutoModelForCausalLM, AutoConfig
-
+import json
+from dataclasses import dataclass, asdict
 #from langchain_community.retrievers import PubMedRetriever
 #retriever = PubMedRetriever(top_k=3 retmode="json")
 
 
-
+@dataclass
 class Config:
     output_dir: str = "output"
     checkpoint: str = "meta-llama/Meta-Llama-3.1-8B-Instruct"  # Update to LLaMA 3 checkpoint
@@ -22,7 +23,14 @@ class Config:
     min_length: int= 500
     num_beams: int= 4
     input_max_length: int = 2048
-
+    def save(self, path: str):
+          with open(path, "w") as f:
+            json.dump(asdict(self), f, indent=4)
+    @staticmethod
+    def load(path: str):
+        with open(path, "r") as f:
+            data = json.load(f)
+        return Config(**data)
 
 def extract_abstract(example):
     example["abstract"] = example["article"].split("\n")[0]  # Extract text before first newline, which is the abstract

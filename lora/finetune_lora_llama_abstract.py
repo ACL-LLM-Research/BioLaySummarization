@@ -15,12 +15,14 @@ from peft import LoraConfig, get_peft_model, TaskType,PeftModel
 import matplotlib.pyplot as plt
 import pandas as pd
 from huggingface_hub import login
+import json
+from dataclasses import dataclass, asdict
 #from torch.amp import GradScaler
 
 #scaler = GradScaler("cuda")
 #source biolaysumm/bin/activate
 
-
+@dataclass
 class Config:
     output_dir: str = "output"
     checkpoint: str = "meta-llama/Meta-Llama-3.1-8B-Instruct"  # Update to LLaMA 3 checkpoint
@@ -39,7 +41,14 @@ class Config:
     lora_alpha: float = lora_r * 2
     lora_dropout: float = 0.1
     lora_bias: str = "none"
-
+    def save(self, path: str):
+          with open(path, "w") as f:
+            json.dump(asdict(self), f, indent=4)
+    @staticmethod
+    def load(path: str):
+        with open(path, "r") as f:
+            data = json.load(f)
+        return Config(**data)
 
 
 def format_prompt(sample):
