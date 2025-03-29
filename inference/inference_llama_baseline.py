@@ -1,6 +1,6 @@
 import sys
 sys.path.append('./lora')
-from finetune_lora_llama_abstract import extract_abstract, drop_indices,load_dataset,summary_length
+from finetune_lora_llama_abstract import extract_abstract, drop_indices,load_dataset
 from peft import PeftModel
 from transformers import AutoTokenizer, AutoModelForCausalLM, AutoConfig
 import pandas as pd
@@ -11,7 +11,7 @@ from dataclasses import dataclass, asdict
 class Config:
     output_dir: str = "output"
     checkpoint: str = "meta-llama/Meta-Llama-3.1-8B-Instruct"  # Update to LLaMA 3 checkpoint
-    experiment_name: str = "LLaMA_base_PLOS_0312"
+    experiment_name: str = "LLaMA_base_PLOS_0329"
     dataset_name: str = "BioLaySumm/BioLaySumm2025-PLOS"
     max_new_tokens: int= 3000
     min_length: int= 500
@@ -44,6 +44,12 @@ def format_inference_prompt(sample):
         "input_text": prompt,  # Model input (including expected output)
     }
 
+def summary_length():
+    if config.dataset_name == "BioLaySumm/BioLaySumm2025-PLOS":
+        return '100-300 words'
+    if config.dataset_name == "BioLaySumm/BioLaySumm2025-eLife":
+        return '200-600 words'
+    
 def generate_output(sample):
     inputs = tokenizer(sample["input_text"], return_tensors="pt",  truncation=True,max_length=config.input_max_length)
     input_ids = inputs.input_ids.to(model.device)
@@ -60,6 +66,7 @@ def generate_output(sample):
 
 if __name__ == "__main__":
     config = Config()
+    config.save("./configfile/inference_%s_config.json"%(config.experiment_name))
     #model = PeftModel.from_pretrained(config.checkpoint, "linf545/%s"%(config.experiment_name))
     #model = model.to("cuda")
     #tokenizer = AutoTokenizer.from_pretrained(config.checkpoint)
