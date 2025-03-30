@@ -26,7 +26,7 @@ from dataclasses import dataclass, asdict
 class Config:
     output_dir: str = "output"
     checkpoint: str = "meta-llama/Meta-Llama-3.1-8B-Instruct"  # Update to LLaMA 3 checkpoint
-    experiment_name: str = "LLaMA_lora_lr1e5_epo3_rank8_PLOS_0326"
+    experiment_name: str = "LLaMA_lora_lr1e5_epo3_rank8_PLOS_0330"
     dataset_name: str = "BioLaySumm/BioLaySumm2025-PLOS"
     max_length: int = 2048
     optim_type: str = "adamw_torch"
@@ -234,11 +234,10 @@ if __name__ == "__main__":
     train_set =dataset["train"]
     val_set=dataset["validation"]
 
+    summary_word_len = summary_length()
     formatted_train = train_set.map(format_prompt, remove_columns=dataset["train"].column_names)
     formatted_val = val_set.map(format_prompt, remove_columns=dataset["validation"].column_names)
-
-
-    summary_word_len = summary_length()
+    
     tokenized_train = formatted_train.map(tokenize_data, batched=True, remove_columns=["input_text"])
     tokenized_val = formatted_val.map(tokenize_data, batched=True, remove_columns=["input_text"])
 
