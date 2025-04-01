@@ -19,7 +19,6 @@ class Config:
     experiment_name: str = "RAG_main_text_general_retraiever"
     dataset_name: str = "BioLaySumm/BioLaySumm2025-PLOS"
     max_new_tokens: int= 3000
-    min_length: int= 500
     num_beams: int= 4
     input_max_length: int = 2048
     def save(self, path: str):
@@ -115,7 +114,7 @@ def generate_output(sample):
     inputs = tokenizer(sample["input_text"], return_tensors="pt",  truncation=True,max_length=config.input_max_length)
     input_ids = inputs.input_ids.to(model.device)
     attention_mask = inputs.attention_mask.to(model.device) 
-    output_ids = model.generate(input_ids, attention_mask=attention_mask, max_new_tokens=config.max_new_tokens,min_length=config.min_length,
+    output_ids = model.generate(input_ids, attention_mask=attention_mask, max_new_tokens=config.max_new_tokens,
                                 num_beams=config.num_beams,do_sample=False,
                                 temperature=None,top_p=None, pad_token_id=tokenizer.eos_token_id)
     decoded = tokenizer.decode(output_ids[0], skip_special_tokens=True)
