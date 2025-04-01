@@ -1,6 +1,6 @@
 import sys
 sys.path.append('./lora')
-from finetune_lora_llama_abstract import extract_abstract, drop_indices,load_dataset,summary_length
+from finetune_lora_llama_abstract import extract_abstract, drop_indices,load_dataset
 from peft import PeftModel
 from transformers import AutoTokenizer, AutoModelForCausalLM, AutoConfig
 import pandas as pd
@@ -11,11 +11,10 @@ from dataclasses import dataclass, asdict
 class Config:
     output_dir: str = "output"
     checkpoint: str = "meta-llama/Meta-Llama-3.1-8B-Instruct"  # Update to LLaMA 3 checkpoint
-    experiment_name: str = "llama_PLOS_lora_inference_0312"
-    lora_checkpoint: str = "LLaMA_lora_PLOS_0312"
+    experiment_name: str = "llama_PLOS_lora_lr1e5_epo3_rank8_PLOS_inference_0330"
+    lora_checkpoint: str = "linf545/LLaMA_lora_lr1e5_epo3_rank8_PLOS_0330"
     dataset_name: str = "BioLaySumm/BioLaySumm2025-PLOS"
     max_new_tokens: int= 3000
-    min_length: int= 500
     num_beams: int= 4
     input_max_length: int = 2048
     def save(self, path: str):
@@ -26,7 +25,14 @@ class Config:
         with open(path, "r") as f:
             data = json.load(f)
         return Config(**data)
-    
+
+
+def summary_length():
+    if config.dataset_name == "BioLaySumm/BioLaySumm2025-PLOS":
+        return '100-300 words'
+    if config.dataset_name == "BioLaySumm/BioLaySumm2025-eLife":
+        return '200-600 words'
+
 def format_inference_prompt(sample):
     prompt = f"""<|begin_of_text|><|start_header_id|>system<|end_header_id|> 
     You are an expert science communicator. Your task is to generate a **clear, accurate, and formal** summary of biomedical research articles.
@@ -62,7 +68,7 @@ if __name__ == "__main__":
     config = Config()
     config.save("./configfile/inference_%s_config.json"%(config.experiment_name))
     base_model = AutoModelForCausalLM.from_pretrained(config.checkpoint, config=AutoConfig.from_pretrained(config.checkpoint), torch_dtype="auto", device_map="cuda")
-    model = PeftModel.from_pretrained(base_model, "linf545/%s"%(config.lora_checkpoint))
+    model = PeftModel.from_pretrained(base_model, config.lora_checkpoint)
     model = model.to("cuda")
     tokenizer = AutoTokenizer.from_pretrained(config.checkpoint)
     tokenizer.pad_token = tokenizer.eos_token
