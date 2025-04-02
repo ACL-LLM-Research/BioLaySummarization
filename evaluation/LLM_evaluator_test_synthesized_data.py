@@ -69,7 +69,7 @@ for f in ['normal_summaries','bad_factuality_summaries','bad_readability_summari
     generated_df=pd.read_parquet("./output/synthesized_data/%s.parquet"%(f))
     generated_df['Generated_LaySummary'] = generated_df['summary'].apply(extract_lay_summary)
     test_cases = []
-    for i in range(2):  # First 10 test cases
+    for i in range(20):  # First 10 test cases
         test_case = LLMTestCase(
             input=dataset['validation'][i]['abstract'],
             actual_output=generated_df['Generated_LaySummary'][i],
