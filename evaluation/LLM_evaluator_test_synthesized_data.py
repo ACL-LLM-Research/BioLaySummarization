@@ -65,24 +65,21 @@ dataset = dataset.map(extract_abstract)
 
 
 
-for file in ['normal_summaries','bad_factuality_summaries','bad_readability_summaries','bad_relavance_summaries']:
-    generated_df=pd.read_parquet("./output/synthesized_data/%s.parquet"%(file))
+for f in ['normal_summaries','bad_factuality_summaries','bad_readability_summaries','bad_relavance_summaries']:
+    generated_df=pd.read_parquet("./output/synthesized_data/%s.parquet"%(f))
     generated_df['Generated_LaySummary'] = generated_df['summary'].apply(extract_lay_summary)
     test_cases = []
-    for i in range(20):  # First 10 test cases
+    for i in range(2):  # First 10 test cases
         test_case = LLMTestCase(
             input=dataset['validation'][i]['abstract'],
             actual_output=generated_df['Generated_LaySummary'][i],
             expected_output=dataset['validation'][i]['summary'],)
         test_cases.append(test_case)
-
     results = evaluate(test_cases=test_cases, metrics=[correctness_metric])
-
     # Parse the results
     parsed_results = parse_results(results)
-
     # Save as CSV file
-    csv_file = "./output/evaluation_results/20250401_synthesized_data_eval/plos_synthesized_evaluation_results_%s.csv"%(file)
+    csv_file = "./output/evaluation_results/20250401_synthesized_data_eval/plos_synthesized_evaluation_results_%s.csv"%(f)
     with open(csv_file, mode="w", newline="", encoding="utf-8") as file:
         writer = csv.DictWriter(file, fieldnames=parsed_results[0].keys())
         writer.writeheader()
