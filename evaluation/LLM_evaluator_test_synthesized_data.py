@@ -31,7 +31,7 @@ def parse_results(results):
         # Extract metric scores
         for metric in test_result.metrics_data:
             entry[f"{metric.name}_score"] = metric.score
-            entry[f"{metric.name}_reason"] = metric.reason
+            entry[f"{metric.name}_reason"] = getattr(metric, 'reason', "N/A")
         parsed_data.append(entry)
     return parsed_data
 
