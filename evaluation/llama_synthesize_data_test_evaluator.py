@@ -13,18 +13,6 @@ class Config:
     experiment_name: str = "LLaMA_lora_PLOS_0312"
     dataset_name: str = "BioLaySumm/BioLaySumm2025-PLOS"
     max_length: int = 2048
-    optim_type: str = "adamw_torch"
-    per_device_train_batch_size: int = 1
-    gradient_accumulation_steps: int = 4  
-    per_device_eval_batch_size: int = 2
-    n_epochs: int = 3
-    freeze_layers: int = 20  # other option 16,20,24
-    lr: float = 2e-4
-    #warmup_steps: int = 20
-    lora_r: int = 16
-    lora_alpha: float = lora_r * 2
-    lora_dropout: float = 0.1
-    lora_bias: str = "none"
 
 
 def prompt_generate_normal_examples(sample):
@@ -36,7 +24,7 @@ def prompt_generate_normal_examples(sample):
     Title: {sample['title']}
     Abstract: {sample['abstract']}
 
-    Provide a **formal summary** of the article in 1000-2000 words. **Do not include explanations, self-reflections, or additional notes.** Keep the response strictly to the summary.
+    Provide a **formal summary** of the article in 100-300 words. **Do not include explanations, self-reflections, or additional notes.** Keep the response strictly to the summary.
     <|start_header_id|>assistant<|end_header_id|>
     """
     return {
@@ -53,7 +41,7 @@ def prompt_generate_bad_relavance(sample):
     Title: {sample['title']}
     Abstract: {sample['abstract']}
 
-    Provide a **formal summary** of the article in 1000-2000 words. You may focus on the overall topic area rather than specific results or methods. Avoid overloading with precise details.
+    Provide a **formal summary** of the article in 100-300 words. You may focus on the overall topic area rather than specific results or methods. Avoid overloading with precise details.
     <|start_header_id|>assistant<|end_header_id|>
     """
     return {
@@ -69,7 +57,7 @@ def prompt_generate_bad_redability(sample):
     Title: {sample['title']}
     Abstract: {sample['abstract']}
 
-    Provide a **complete and information-rich summary** of the article in 1000-2000 words. You may include technical phrasing, long sentences, and complex descriptions. Prioritize detail over clarity.
+    Provide a **complete and information-rich summary** of the article in 100-300 words. You may include technical phrasing, long sentences, and complex descriptions. Prioritize detail over clarity.
     <|start_header_id|>assistant<|end_header_id|>
     """
     return {
@@ -86,7 +74,7 @@ def prompt_generate_bad_factuality(sample):
     Title: {sample['title']}
     Abstract: {sample['abstract']}
 
-    Provide a **summary** of the article in 1000-2000 words. You may include **reasonable assumptions, interpretations, or inferred conclusions** to enhance the summary, even if not directly stated in the abstract.
+    Provide a **summary** of the article in 100-300 words. You may include **reasonable assumptions, interpretations, or inferred conclusions** to enhance the summary, even if not directly stated in the abstract.
     <|start_header_id|>assistant<|end_header_id|>
     """
     return {
@@ -126,21 +114,21 @@ val_set=dataset["validation"]
 val_subset = val_set.select(range(20))
 formatted_val = val_subset.map(prompt_generate_normal_examples, remove_columns=dataset["validation"].column_names)
 generated_val = formatted_val.map(generate_output)
-generated_val.to_parquet("./output/normal_summaries.parquet")
+generated_val.to_parquet("./output/synthesized_data/normal_summaries.parquet")
 
 bad_relavance_set = val_set.select(range(20))
 formatted_bad_relavance = bad_relavance_set.map(prompt_generate_bad_relavance, remove_columns=dataset["validation"].column_names)
 generated_bad_relavance = formatted_bad_relavance.map(generate_output)
-generated_bad_relavance.to_parquet("./output/bad_relavance_summaries.parquet")
+generated_bad_relavance.to_parquet("./output/synthesized_data/bad_relavance_summaries.parquet")
 
 bad_readability_set = val_set.select(range(20))
 formatted_bad_readability = bad_readability_set.map(prompt_generate_bad_redability, remove_columns=dataset["validation"].column_names)
 generated_bad_readability = formatted_bad_readability.map(generate_output)
-generated_bad_readability.to_parquet("./output/bad_readability_summaries.parquet")
+generated_bad_readability.to_parquet("./output/synthesized_data/bad_readability_summaries.parquet")
 
 
 bad_factuality_set = val_set.select(range(20))
 formatted_bad_factuality = bad_factuality_set.map(prompt_generate_bad_factuality, remove_columns=dataset["validation"].column_names)
 generated_bad_factuality = formatted_bad_factuality.map(generate_output)
-generated_bad_factuality.to_parquet("./output/bad_factuality_summaries.parquet")
+generated_bad_factuality.to_parquet("./output/synthesized_data/bad_factuality_summaries.parquet")
 
