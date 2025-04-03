@@ -18,7 +18,7 @@ class Config:
     checkpoint: str = "meta-llama/Meta-Llama-3.1-8B-Instruct"  # Update to LLaMA 3 checkpoint
     experiment_name: str = "RAG_main_text_general_retraiever"
     dataset_name: str = "BioLaySumm/BioLaySumm2025-PLOS"
-    max_new_tokens: int= 3000
+    max_new_tokens: int= 800
     num_beams: int= 4
     input_max_length: int = 2048
     def save(self, path: str):
@@ -101,6 +101,7 @@ def rag_format_inference_prompt(sample):
     {sample['retrieved_context']}
 
     Provide a **formal summary** of the article in {summary_word_len}. **Do not include explanations, self-reflections, preamble, extra formatting, or additional notes.** 
+    **Avoid repeating any phrases or ideas.**
     Keep the response strictly to the summary. The output should begin directly with the summary text itself.
 
     <|start_header_id|>assistant<|end_header_id|>
