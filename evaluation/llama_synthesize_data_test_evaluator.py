@@ -82,6 +82,21 @@ def prompt_generate_bad_factuality(sample):
     }
 
 
+def prompt_generate_bad(sample):
+    prompt = f"""<|begin_of_text|><|start_header_id|>system<|end_header_id|> 
+    You are a deliberately ineffective science communicator. Your task is to generate an example of a poorly written summary of biomedical research. This summary should reflect common mistakes in science communication, such as vague language, poor structure, and misuse of terminology. The summary may also include minor factual inaccuracies or exaggerated claims to illustrate how misleading summaries might appear. This output will be used strictly for educational comparison with well-written summaries.
+
+    <|start_header_id|>user<|end_header_id|>
+    Title: {sample['title']}
+    Abstract: {sample['abstract']}
+
+    Provide a **poor-quality summary** of the article in 100–300 words, reflecting issues like lack of clarity, overgeneralization, or scientific inaccuracy (intended for contrastive purposes only).
+    <|start_header_id|>assistant<|end_header_id|>
+    """
+    return {
+        "input_text": prompt,  # Model input (including expected output)
+    }
+
 def generate_output(sample):
     inputs = tokenizer(sample["input_text"], return_tensors="pt",  truncation=True,max_length=1024)
     input_ids = inputs.input_ids.to(model.device)
@@ -116,7 +131,7 @@ formatted_val = val_subset.map(prompt_generate_normal_examples, remove_columns=d
 generated_val = formatted_val.map(generate_output)
 generated_val.to_parquet("./output/synthesized_data/normal_summaries.parquet")
 
-bad_relavance_set = val_set.select(range(20))
+'''bad_relavance_set = val_set.select(range(20))
 formatted_bad_relavance = bad_relavance_set.map(prompt_generate_bad_relavance, remove_columns=dataset["validation"].column_names)
 generated_bad_relavance = formatted_bad_relavance.map(generate_output)
 generated_bad_relavance.to_parquet("./output/synthesized_data/bad_relavance_summaries.parquet")
@@ -131,4 +146,8 @@ bad_factuality_set = val_set.select(range(20))
 formatted_bad_factuality = bad_factuality_set.map(prompt_generate_bad_factuality, remove_columns=dataset["validation"].column_names)
 generated_bad_factuality = formatted_bad_factuality.map(generate_output)
 generated_bad_factuality.to_parquet("./output/synthesized_data/bad_factuality_summaries.parquet")
-
+'''
+bad_set = val_set.select(range(20))
+formatted_bad = bad_set.map(prompt_generate_bad, remove_columns=dataset["validation"].column_names)
+generated_bad = formatted_bad.map(generate_output)
+generated_bad.to_parquet("./output/synthesized_data/bad_summaries.parquet")
