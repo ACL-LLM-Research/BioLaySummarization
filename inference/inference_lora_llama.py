@@ -14,7 +14,7 @@ class Config:
     experiment_name: str = "llama_PLOS_lora_lr1e5_epo3_rank8_PLOS_inference_0330"
     lora_checkpoint: str = "linf545/LLaMA_lora_lr1e5_epo3_rank8_PLOS_0330"
     dataset_name: str = "BioLaySumm/BioLaySumm2025-PLOS"
-    max_new_tokens: int= 3000
+    max_new_tokens: int= 800
     num_beams: int= 4
     input_max_length: int = 2048
     def save(self, path: str):
@@ -43,6 +43,7 @@ def format_inference_prompt(sample):
     Abstract: {sample['abstract']}
 
     Provide a **formal summary** of the article in {summary_word_len}. **Do not include explanations, self-reflections, or additional notes.** 
+    **Avoid repeating any phrases or ideas.** 
     Keep the response strictly to the summary.The output should begin directly with the summary text itself.
     <|start_header_id|>assistant<|end_header_id|>
     """
