@@ -5,13 +5,17 @@ attrs==25.1.0
 certifi==2025.1.31
 charset-normalizer==3.4.1
 datasets==3.3.2
-deepeval==2.5.2
+deepeval==2.6.5
 dill==0.3.8
+faiss-cpu==1.10.0
 filelock==3.17.0
 frozenlist==1.5.0
 fsspec==2024.12.0
 huggingface-hub==0.29.1
 idna==3.10
+langchain==0.3.21
+langchain-community==0.3.20
+langchain-huggingface==0.1.2
 Jinja2==3.1.5
 lightning==2.5.0.post0
 lightning-utilities==0.12.0
@@ -34,6 +38,7 @@ PyYAML==6.0.2
 regex==2024.11.6
 requests==2.32.3
 safetensors==0.5.3
+sentence-transformers==3.4.1
 setuptools==75.8.2
 six==1.17.0
 sympy==1.13.1
@@ -45,5 +50,6 @@ transformers==4.49.0
 typing_extensions==4.12.2
 tzdata==2025.1
 urllib3==2.3.0
+xmltodict==0.14.2
 xxhash==3.5.0
 yarl==1.18.3

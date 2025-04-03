@@ -14,6 +14,7 @@ from datasets import load_dataset
 from huggingface_hub import login
 import re
 from datasets import DatasetDict
+import matplotlib.pyplot as plt
 
 # check toecker length of all data
 def len_article_details():
@@ -77,6 +78,31 @@ def drop_indices(dataset, drop_dict):
     return DatasetDict(new_dataset)
 
 
+def count_summary_word_lengths_by_split(dataset):
+    word_counts_by_split = {}
+    for split in ['train', 'validation']: # test set does not have summary
+        split_counts = []
+        for summary in dataset[split]['summary']:
+            if summary:
+                split_counts.append(len(summary.split()))
+        word_counts_by_split[split] = split_counts
+    return word_counts_by_split
+
+def plot_summary_word_distribution_by_split(word_counts_by_split,name):
+    plt.figure(figsize=(10, 6))
+    for split, counts in word_counts_by_split.items():
+        plt.hist(counts, bins=50, alpha=0.5, label=split, edgecolor='black', linewidth=0.5)
+    plt.title('Summary Word Count Distribution by Dataset Split')
+    plt.xlabel('Number of Words')
+    plt.ylabel('Frequency')
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+    plt.savefig('./figures/EDA/%s_summary_word_count_distribution.png'%(name))
+    plt.close()
+
+
+
 model_id = "meta-llama/Meta-Llama-3.1-8B-Instruct"
 config = AutoConfig.from_pretrained(model_id)
 config.rope_scaling = {"type": "linear", "factor": 2.0}  
@@ -91,6 +117,8 @@ dataset.column_names
 
 len_article_details()
 len_abstract()
+word_counts_by_split = count_summary_word_lengths_by_split(dataset)
+plot_summary_word_distribution_by_split(word_counts_by_split,"eLife")
 
 dataset = load_dataset("BioLaySumm/BioLaySumm2025-PLOS")
 dataset = dataset.map(extract_abstract)
@@ -102,7 +130,8 @@ len_abstract()
 plos_drop_dict={'train':[[725, 1939, 4226, 4842, 5991, 6310, 12050, 13498, 14104, 14199, 18921, 21808, 22922]],'validation':[],'test':[]} # drop due to inccorrect abstract
 dataset = drop_indices(dataset, plos_drop_dict)
 len_abstract()
-
+word_counts_by_split = count_summary_word_lengths_by_split(dataset)
+plot_summary_word_distribution_by_split(word_counts_by_split,"plos")
 
 prompt = """<|begin_of_text|><|start_header_id|>system<|end_header_id|>
 

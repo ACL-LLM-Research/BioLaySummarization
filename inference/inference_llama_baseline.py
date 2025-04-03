@@ -1,31 +1,30 @@
 import sys
-sys.path.append('../lora')
+sys.path.append('./lora')
 from finetune_lora_llama_abstract import extract_abstract, drop_indices,load_dataset
 from peft import PeftModel
 from transformers import AutoTokenizer, AutoModelForCausalLM, AutoConfig
 import pandas as pd
+import json
+from dataclasses import dataclass, asdict
 
-
-
+@dataclass
 class Config:
     output_dir: str = "output"
     checkpoint: str = "meta-llama/Meta-Llama-3.1-8B-Instruct"  # Update to LLaMA 3 checkpoint
-    experiment_name: str = "LLaMA_lora_PLOS_0312"
+    experiment_name: str = "LLaMA_base_PLOS_0329"
     dataset_name: str = "BioLaySumm/BioLaySumm2025-PLOS"
-    max_length: int = 2048
-    optim_type: str = "adamw_torch"
-    per_device_train_batch_size: int = 1
-    gradient_accumulation_steps: int = 4  
-    per_device_eval_batch_size: int = 2
-    n_epochs: int = 3
-    freeze_layers: int = 20  # other option 16,20,24
-    lr: float = 2e-4
-    #warmup_steps: int = 20
-    lora_r: int = 16
-    lora_alpha: float = lora_r * 2
-    lora_dropout: float = 0.1
-    lora_bias: str = "none"
-
+    max_new_tokens: int= 3000
+    num_beams: int= 4
+    input_max_length: int = 2048
+    def save(self, path: str):
+          with open(path, "w") as f:
+            json.dump(asdict(self), f, indent=4)
+    @staticmethod
+    def load(path: str):
+        with open(path, "r") as f:
+            data = json.load(f)
+        return Config(**data)
+    
 
 def format_inference_prompt(sample):
     prompt = f"""<|begin_of_text|><|start_header_id|>system<|end_header_id|> 
@@ -36,58 +35,65 @@ def format_inference_prompt(sample):
     Title: {sample['title']}
     Abstract: {sample['abstract']}
 
-    Provide a **formal summary** of the article in 200-400 words. **Do not include explanations, self-reflections, or additional notes.** Keep the response strictly to the summary.
+    Provide a **formal summary** of the article in {summary_word_len}. **Do not include explanations, self-reflections, or additional notes.** 
+    Keep the response strictly to the summary.The output should begin directly with the summary text itself.
     <|start_header_id|>assistant<|end_header_id|>
     """
     return {
         "input_text": prompt,  # Model input (including expected output)
     }
 
+def summary_length():
+    if config.dataset_name == "BioLaySumm/BioLaySumm2025-PLOS":
+        return '100-300 words'
+    if config.dataset_name == "BioLaySumm/BioLaySumm2025-eLife":
+        return '200-600 words'
+    
 def generate_output(sample):
-    inputs = tokenizer(sample["input_text"], return_tensors="pt",  truncation=True,max_length=1024)
+    inputs = tokenizer(sample["input_text"], return_tensors="pt",  truncation=True,max_length=config.input_max_length)
     input_ids = inputs.input_ids.to(model.device)
     attention_mask = inputs.attention_mask.to(model.device) 
-    output_ids = model.generate(input_ids, attention_mask=attention_mask, max_new_tokens=400,do_sample=False, pad_token_id=tokenizer.eos_token_id)
-    sample["summary"] = tokenizer.decode(output_ids[0], skip_special_tokens=True)
+    output_ids = model.generate(input_ids, attention_mask=attention_mask, max_new_tokens=config.max_new_tokens,num_beams=config.num_beams,
+                                do_sample=False, temperature=None,top_p=None,pad_token_id=tokenizer.eos_token_id)
+    decoded = tokenizer.decode(output_ids[0], skip_special_tokens=True)
+    if "assistant\n" in decoded:
+        summary = decoded.split("assistant\n", 1)[-1].strip()
+    else:
+        summary = decoded.strip()
+    sample["summary"] = summary
     return sample
 
+if __name__ == "__main__":
+    config = Config()
+    config.save("./configfile/inference_%s_config.json"%(config.experiment_name))
+    #model = PeftModel.from_pretrained(config.checkpoint, "linf545/%s"%(config.experiment_name))
+    #model = model.to("cuda")
+    #tokenizer = AutoTokenizer.from_pretrained(config.checkpoint)
 
-config = Config()
-#model = PeftModel.from_pretrained(config.checkpoint, "linf545/%s"%(config.experiment_name))
-#model = model.to("cuda")
-#tokenizer = AutoTokenizer.from_pretrained(config.checkpoint)
+    autoconfig = AutoConfig.from_pretrained(config.checkpoint)
+    autoconfig .rope_scaling = {"type": "linear", "factor": 2.0}  
+    model = AutoModelForCausalLM.from_pretrained(config.checkpoint, config=autoconfig, device_map="cuda")
+    tokenizer = AutoTokenizer.from_pretrained(config.checkpoint)
+    tokenizer.pad_token = tokenizer.eos_token
 
-autoconfig = AutoConfig.from_pretrained(config.checkpoint)
-autoconfig .rope_scaling = {"type": "linear", "factor": 2.0}  
-model = AutoModelForCausalLM.from_pretrained("meta-llama/Meta-Llama-3.1-8B-Instruct", config=autoconfig, device_map="cuda")
-tokenizer = AutoTokenizer.from_pretrained("meta-llama/Meta-Llama-3.1-8B-Instruct")
-tokenizer.pad_token = tokenizer.eos_token
+    dataset = load_dataset(config.dataset_name)
+    dataset = dataset.map(extract_abstract)
+    dataset.column_names
 
-dataset = load_dataset(config.dataset_name)
-dataset = dataset.map(extract_abstract)
-dataset.column_names
+    if config.dataset_name == "BioLaySumm/BioLaySumm2025-PLOS":
+        plos_drop_dict={'train':[[725, 1939, 4226, 4842, 5991, 6310, 12050, 13498, 14104, 14199, 18921, 21808, 22922]],'validation':[],'test':[]} # drop due to inccorrect abstract
+        dataset = drop_indices(dataset, plos_drop_dict)
 
-if config.dataset_name == "BioLaySumm/BioLaySumm2025-PLOS":
-    plos_drop_dict={'train':[[725, 1939, 4226, 4842, 5991, 6310, 12050, 13498, 14104, 14199, 18921, 21808, 22922]],'validation':[],'test':[]} # drop due to inccorrect abstract
-    dataset = drop_indices(dataset, plos_drop_dict)
+    val_set=dataset["validation"]
+    #test_set=dataset["test"]
 
-val_set=dataset["validation"]
-#test_set=dataset["test"]
+    summary_word_len = summary_length()
+    formatted_val = val_set.map(format_inference_prompt, remove_columns=dataset["validation"].column_names)
+    #formatted_test = test_set.map(format_prompt, remove_columns=dataset["test"].column_names)
 
-
-formatted_val = val_set.map(format_inference_prompt, remove_columns=dataset["validation"].column_names)
-#formatted_test = test_set.map(format_prompt, remove_columns=dataset["test"].column_names)
-
-
-#tokenized_val = formatted_val.map(tokenizer, batched=True, remove_columns=["input_text"])
-#tokenized_test = formatted_test.map(tokenizer, batched=True, remove_columns=["input_text"])
-
-
-#test_case = formatted_val.select(range(2))
-#result=test_case.map(generate_output)
-
-generated_val = formatted_val.map(generate_output)
-
-
-generated_val.to_parquet("./output/test_summaries.parquet")
-#test= load_dataset("parquet", data_files="./output/test_summaries.parquet")
+    #test_case = formatted_val.select(range(5))
+    #result=test_case.map(generate_output)
+    #generated_val = result
+    generated_val = formatted_val.map(generate_output)
+    generated_val.to_parquet("./output/generated_summaries/LLaMA_base/%s_val_summaries.parquet"%(config.dataset_name.split('-')[1]))
+    #test= load_dataset("parquet", data_files="./output/test_summaries.parquet")

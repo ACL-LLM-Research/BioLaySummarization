@@ -11,12 +11,12 @@ from datasets import load_dataset
 import csv
 import json
 
+os.environ["OPENAI_API_KEY"] ='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'
+
 
 def extract_abstract(example):
     example["abstract"] = example["article"].split("\n")[0]  # Extract text before first newline, which is the abstract
     return example
-
-os.environ["OPENAI_API_KEY"] ='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'
 
 correctness_metric = GEval(
     #name="BioSumm",

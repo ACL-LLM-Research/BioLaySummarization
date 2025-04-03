@@ -15,29 +15,66 @@ from peft import LoraConfig, get_peft_model, TaskType,PeftModel
 import matplotlib.pyplot as plt
 import pandas as pd
 from huggingface_hub import login
+import json
+from dataclasses import dataclass, asdict
 #from torch.amp import GradScaler
 
 #scaler = GradScaler("cuda")
 #source biolaysumm/bin/activate
 
+@dataclass
+class Config:
+    output_dir: str = "output"
+    checkpoint: str = "meta-llama/Meta-Llama-3.1-8B-Instruct"  # Update to LLaMA 3 checkpoint
+    experiment_name: str = "LLaMA_lora_lr1e5_epo3_rank8_PLOS_0330"
+    dataset_name: str = "BioLaySumm/BioLaySumm2025-PLOS"
+    max_length: int = 2048
+    optim_type: str = "adamw_torch"
+    per_device_train_batch_size: int = 1
+    gradient_accumulation_steps: int = 4  
+    per_device_eval_batch_size: int = 2
+    n_epochs: int = 3
+    freeze_layers: int = 20  # other option 16,20,24
+    lr: float = 1e-5
+    #warmup_steps: int = 20
+    lora_r: int = 8
+    lora_alpha: float = lora_r * 2
+    lora_dropout: float = 0.1
+    lora_bias: str = "none"
+    def save(self, path: str):
+          with open(path, "w") as f:
+            json.dump(asdict(self), f, indent=4)
+    @staticmethod
+    def load(path: str):
+        with open(path, "r") as f:
+            data = json.load(f)
+        return Config(**data)
+
 
 def format_prompt(sample):
     prompt = f"""
-    [SYSTEM]  
-    You are a skilled science communicator. Your task is to generate a plain-language summary of biomedical research articles, making them accessible to a general audience without specialized knowledge.
+    <|begin_of_text|><|start_header_id|>system<|end_header_id|> 
+    You are an expert science communicator. Your task is to generate a **clear, accurate, and formal** summary of biomedical research articles.
+    The summary should be **accessible to a general audience** while maintaining scientific rigor.
     
-    [USER]  
-    Generate a plain-language summary based on the following title and abstract, ensuring clarity and accessibility to a non-expert audience.
-    
+    <|start_header_id|>user<|end_header_id|>
     Title: {sample['title']}  
     Abstract: {sample['abstract']}  
 
-    [ASSISTANT]  
+    Provide a **formal summary** of the article in {summary_word_len}. **Do not include explanations, self-reflections, or additional notes.** 
+    Keep the response strictly to the summary.The output should begin directly with the summary text itself.
+    <|start_header_id|>assistant<|end_header_id|>
     {sample['summary']}
     """
     return {
         "input_text": prompt,  # Model input (including expected output)
     }
+
+def summary_length():
+    if config.dataset_name == "BioLaySumm/BioLaySumm2025-PLOS":
+        return '100-300 words'
+    if config.dataset_name == "BioLaySumm/BioLaySumm2025-eLife":
+        return '200-600 words'
 
 
 def extract_abstract(example):
@@ -57,9 +94,7 @@ def tokenize_data(sample):
     attention_mask = torch.tensor(encodings["attention_mask"], dtype=torch.long)
     # Ensure labels are the same as input_ids but mask padding tokens
     labels = input_ids.clone()
-    labels[:-1] = input_ids[1:]  # Shift all tokens left
-    labels[-1] = tokenizer.pad_token_id  # Ensure last token is padding
-    labels[labels == tokenizer.pad_token_id] = -100
+    labels[attention_mask == 0] = -100 
     return {
         "input_ids": input_ids,
         "attention_mask": attention_mask,
@@ -121,32 +156,14 @@ def plot_training_and_validation_loss(history):
     plt.savefig('./figures/%s_loss_epoch'%(config.experiment_name))  # Save plot without showing
     plt.close() 
     df = pd.DataFrame(history)
-    df.to_csv(f'./figures/%s_loss_history.csv'%(config.experiment_name), index=False)
+    df.to_csv('./figures/%s_loss_history.csv'%(config.experiment_name), index=False)
 
-
-
-class Config:
-    output_dir: str = "output"
-    checkpoint: str = "meta-llama/Meta-Llama-3.1-8B-Instruct"  # Update to LLaMA 3 checkpoint
-    experiment_name: str = "LLaMA_lora_PLOS_0312"
-    dataset_name: str = "BioLaySumm/BioLaySumm2025-PLOS"
-    max_length: int = 2048
-    optim_type: str = "adamw_torch"
-    per_device_train_batch_size: int = 1
-    gradient_accumulation_steps: int = 4  
-    per_device_eval_batch_size: int = 2
-    n_epochs: int = 3
-    freeze_layers: int = 20  # other option 16,20,24
-    lr: float = 2e-4
-    #warmup_steps: int = 20
-    lora_r: int = 16
-    lora_alpha: float = lora_r * 2
-    lora_dropout: float = 0.1
-    lora_bias: str = "none"
 
 
 if __name__ == "__main__":
     config = Config()
+    config.save("./configfile/finetune_%s_config.json"%(config.experiment_name))  # Save config to a file
+    #config=Config.load("xxxxconfig.json")
     training_args = TrainingArguments(
         output_dir="output",
         overwrite_output_dir=True,
@@ -160,7 +177,7 @@ if __name__ == "__main__":
         eval_steps=1000,
         save_strategy="steps",
         save_steps=1000,
-        save_total_limit=20,
+        save_total_limit=10,
         optim=config.optim_type,
         fp16=True,
         #bf16=True,# for A100 and H100
@@ -176,7 +193,7 @@ if __name__ == "__main__":
         r=config.lora_r,  # Higher rank for better adaptation
         lora_alpha=config.lora_alpha,  # Scaling factor, higher for better adaptation
         target_modules=["q_proj", "k_proj", "v_proj", "o_proj"],  # Apply LoRA to all attention layers
-        layers_to_transform=[i for i in range(32) if i >= config.freeze_layers],  # Apply LoRA to higher layers (assuming 80-layer model)
+        layers_to_transform=[i for i in range(32) if i >= config.freeze_layers],  # Apply LoRA to higher layers 
         lora_dropout=config.lora_dropout,  # Higher dropout to prevent overfitting
         bias=config.lora_bias,  # No additional biases
         task_type=TaskType.CAUSAL_LM,  # Task type for text generation
@@ -217,11 +234,10 @@ if __name__ == "__main__":
     train_set =dataset["train"]
     val_set=dataset["validation"]
 
+    summary_word_len = summary_length()
     formatted_train = train_set.map(format_prompt, remove_columns=dataset["train"].column_names)
     formatted_val = val_set.map(format_prompt, remove_columns=dataset["validation"].column_names)
-
-
-
+    
     tokenized_train = formatted_train.map(tokenize_data, batched=True, remove_columns=["input_text"])
     tokenized_val = formatted_val.map(tokenize_data, batched=True, remove_columns=["input_text"])
 
@@ -229,7 +245,7 @@ if __name__ == "__main__":
     # Ensure the format is correct for training
     #tokenized_train.set_format("torch", device="cuda", columns=["input_ids", "attention_mask"])
     #tokenized_val.set_format("torch", device="cuda", columns=["input_ids", "attention_mask"])
-
+    
     tokenized_train.set_format(type="torch", columns=["input_ids", "attention_mask", "labels"])
     tokenized_val.set_format(type="torch", columns=["input_ids", "attention_mask", "labels"])
 
@@ -269,7 +285,7 @@ if __name__ == "__main__":
     login(token="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")
     model.push_to_hub("linf545/%s"%(config.experiment_name))
 
-    #test loading the model
-    #model = PeftModel.from_pretrained(config.checkpoint, "linf545/%s"%(config.experiment_name))
+        #test loading the model
+        #model = PeftModel.from_pretrained(config.checkpoint, "linf545/%s"%(config.experiment_name))
 
 
