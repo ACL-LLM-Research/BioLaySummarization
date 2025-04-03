@@ -90,7 +90,7 @@ def prompt_generate_bad(sample):
     Title: {sample['title']}
     Abstract: {sample['abstract']}
 
-    Provide a **poor-quality summary** of the article in 100–300 words, reflecting issues like lack of clarity, overgeneralization, or scientific inaccuracy (intended for contrastive purposes only).
+    Provide a **poor-quality summary** of the article in 100-300 words, reflecting issues like lack of clarity, overgeneralization, or scientific inaccuracy (intended for contrastive purposes only).At least some summary need to generated.**Do not include explanations, self-reflections, or additional notes.** Keep the response strictly to the summary.
     <|start_header_id|>assistant<|end_header_id|>
     """
     return {

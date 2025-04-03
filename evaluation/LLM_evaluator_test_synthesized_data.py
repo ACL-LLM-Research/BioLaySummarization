@@ -64,8 +64,9 @@ dataset = load_dataset("BioLaySumm/BioLaySumm2025-PLOS")
 dataset = dataset.map(extract_abstract)
 
 
+# 'normal_summaries','bad_factuality_summaries','bad_readability_summaries','bad_relavance_summaries'
 
-for f in ['normal_summaries','bad_factuality_summaries','bad_readability_summaries','bad_relavance_summaries']:
+for f in ['bad_summaries']:
     generated_df=pd.read_parquet("./output/synthesized_data/%s.parquet"%(f))
     generated_df['Generated_LaySummary'] = generated_df['summary'].apply(extract_lay_summary)
     test_cases = []
