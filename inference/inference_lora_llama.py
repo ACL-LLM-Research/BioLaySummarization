@@ -67,8 +67,10 @@ def generate_output(sample):
 
 if __name__ == "__main__":
     config = Config()
+    autoconfig = AutoConfig.from_pretrained(config.checkpoint)
+    autoconfig.rope_scaling = {"type": "linear", "factor": 2.0}  
     config.save("./configfile/inference_%s_config.json"%(config.experiment_name))
-    base_model = AutoModelForCausalLM.from_pretrained(config.checkpoint, config=AutoConfig.from_pretrained(config.checkpoint), torch_dtype="auto", device_map="cuda")
+    base_model = AutoModelForCausalLM.from_pretrained(config.checkpoint, config=autoconfig, torch_dtype="auto", device_map="cuda")
     model = PeftModel.from_pretrained(base_model, config.lora_checkpoint)
     model = model.to("cuda")
     tokenizer = AutoTokenizer.from_pretrained(config.checkpoint)
