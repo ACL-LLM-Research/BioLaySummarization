@@ -103,6 +103,7 @@ def generate_output(sample):
     attention_mask = inputs.attention_mask.to(model.device) 
     output_ids = model.generate(input_ids, attention_mask=attention_mask, max_new_tokens=3000,do_sample=False, pad_token_id=tokenizer.eos_token_id)
     sample["summary"] = tokenizer.decode(output_ids[0], skip_special_tokens=True)
+    sample["summary"] = sample["summary"].replace("poorly written", "")
     return sample
 
 

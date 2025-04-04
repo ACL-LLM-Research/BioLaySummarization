@@ -60,7 +60,7 @@ ref_summ=val_set['summary']
 
 all_results = []
 
-for i in ['LLaMA_base/PLOS_val_summaries','LLaMA_lora/PLOS_val_summaries','llama_RAG_local_knowledge/PLOS_val_summaries.parquet']:
+for i in ['LLaMA_base/PLOS_val_summaries','LLaMA_lora/PLOS_val_summaries','llama_RAG_local_knowledge/PLOS_val_summaries']:
     generated_df=pd.read_parquet('./output/generated_summaries/%s.parquet'%(i))
     generated_summ=generated_df['summary'].to_list()
     results = evaluate(generated_summ, ref_summ)
