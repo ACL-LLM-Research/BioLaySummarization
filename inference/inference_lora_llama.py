@@ -56,7 +56,7 @@ def generate_output(sample):
     input_ids = inputs.input_ids.to(model.device)
     attention_mask = inputs.attention_mask.to(model.device) 
     output_ids = model.generate(input_ids, attention_mask=attention_mask, max_new_tokens=config.max_new_tokens,num_beams=config.num_beams,
-                                do_sample=False, temperature=None,top_p=None,pad_token_id=tokenizer.eos_token_id)
+                                repetition_penalty = 1.2,do_sample=False, temperature=None,top_p=None,pad_token_id=tokenizer.eos_token_id)
     decoded = tokenizer.decode(output_ids[0], skip_special_tokens=True)
     if "assistant\n" in decoded:
         summary = decoded.split("assistant\n", 1)[-1].strip()
@@ -83,6 +83,7 @@ if __name__ == "__main__":
         dataset = drop_indices(dataset, plos_drop_dict)
 
     val_set=dataset["validation"]
+    val_set = val_set.select(range(20))
     #test_set=dataset["test"]
 
     summary_word_len = summary_length()
