@@ -44,7 +44,8 @@ def format_inference_prompt(sample):
 
     Provide a **formal summary** of the article in {summary_word_len}. **Do not include explanations, self-reflections, or additional notes.** 
     Keep the response strictly to the summary.The output should begin directly with the summary text itself.<|eot_id|>
-    <|start_header_id|>assistant<|end_header_id|>"""
+    <|start_header_id|>assistant<|end_header_id|>
+    """
     return {
         "input_text": prompt,  # Model input (including expected output)
     }
