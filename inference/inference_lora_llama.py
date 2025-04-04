@@ -84,7 +84,7 @@ if __name__ == "__main__":
         dataset = drop_indices(dataset, plos_drop_dict)
 
     val_set=dataset["validation"]
-    val_set = val_set.select(range(20))
+    #val_set = val_set.select(range(20))
     #test_set=dataset["test"]
 
     summary_word_len = summary_length()
