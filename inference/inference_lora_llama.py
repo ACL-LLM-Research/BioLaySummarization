@@ -36,15 +36,14 @@ def summary_length():
 def format_inference_prompt(sample):
     prompt = f"""<|begin_of_text|><|start_header_id|>system<|end_header_id|> 
     You are an expert science communicator. Your task is to generate a **clear, accurate, and formal** summary of biomedical research articles.
-    The summary should be **accessible to a general audience** while maintaining scientific rigor.
+    The summary should be **accessible to a general audience** while maintaining scientific rigor.<|eot_id|>
 
     <|start_header_id|>user<|end_header_id|>
     Title: {sample['title']}
     Abstract: {sample['abstract']}
 
     Provide a **formal summary** of the article in {summary_word_len}. **Do not include explanations, self-reflections, or additional notes.** 
-    **Avoid repeating any phrases or ideas.** 
-    Keep the response strictly to the summary.The output should begin directly with the summary text itself.
+    Keep the response strictly to the summary.The output should begin directly with the summary text itself.<|eot_id|>
     <|start_header_id|>assistant<|end_header_id|>
     """
     return {
