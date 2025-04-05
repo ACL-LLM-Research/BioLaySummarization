@@ -71,7 +71,8 @@ experiment_name =sys.argv[1]
 generated_text_file=sys.argv[2] 
 
 generated_df=pd.read_parquet("./output/generated_summaries/%s/%s.parquet"%(experiment_name,generated_text_file))
-generated_df['Generated_LaySummary'] = generated_df['summary'].apply(extract_lay_summary)
+#generated_df['Generated_LaySummary'] = generated_df['summary'].apply(extract_lay_summary)
+generated_df.rename(columns={'summary': 'Generated_LaySummary'}, inplace=True)
 test_cases = []
 for i in range(3):  # First 10 test cases
     test_case = LLMTestCase(
@@ -79,9 +80,13 @@ for i in range(3):  # First 10 test cases
         actual_output=generated_df['Generated_LaySummary'][i],
         expected_output=dataset['validation'][i]['summary'],)
     test_cases.append(test_case)
+
 results = evaluate(test_cases=test_cases, metrics=[correctness_metric])
 # Parse the results
 parsed_results = parse_results(results)
 # Save as CSV file
 csv_file = "./output/evaluation_results/Gval_results_val/%s.csv"%(experiment_name+'_'+generated_text_file)
-parsed_results.to_csv(csv_file, index=False)
+with open(csv_file, mode="w", newline="", encoding="utf-8") as file:
+    writer = csv.DictWriter(file, fieldnames=parsed_results[0].keys())
+    writer.writeheader()
+    writer.writerows(parsed_results)
