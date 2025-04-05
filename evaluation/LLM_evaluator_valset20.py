@@ -74,7 +74,7 @@ generated_df=pd.read_parquet("./output/generated_summaries/%s/%s.parquet"%(exper
 #generated_df['Generated_LaySummary'] = generated_df['summary'].apply(extract_lay_summary)
 generated_df.rename(columns={'summary': 'Generated_LaySummary'}, inplace=True)
 test_cases = []
-for i in range(3):  # First 10 test cases
+for i in range(20):  # to be replace with a list of random indices
     test_case = LLMTestCase(
         input=dataset['validation'][i]['abstract'],
         actual_output=generated_df['Generated_LaySummary'][i],
