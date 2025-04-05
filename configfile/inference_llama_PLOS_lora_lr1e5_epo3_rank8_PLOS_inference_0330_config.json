@@ -1,0 +1,10 @@
+{
+    "output_dir": "output",
+    "checkpoint": "meta-llama/Meta-Llama-3.1-8B-Instruct",
+    "experiment_name": "llama_PLOS_lora_lr1e5_epo3_rank8_PLOS_inference_0330",
+    "lora_checkpoint": "linf545/LLaMA_lora_lr1e5_epo1_rank8_PLOS_0404",
+    "dataset_name": "BioLaySumm/BioLaySumm2025-PLOS",
+    "max_new_tokens": 800,
+    "num_beams": 4,
+    "input_max_length": 2048
+}
