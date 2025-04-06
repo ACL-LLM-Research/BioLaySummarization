@@ -1,0 +1,10 @@
+{
+    "output_dir": "output",
+    "checkpoint": "meta-llama/Meta-Llama-3.1-8B-Instruct",
+    "experiment_name": "RAG_main_text_general_retraiever",
+    "dataset_name": "BioLaySumm/BioLaySumm2025-PLOS",
+    "max_new_tokens": 3000,
+    "min_length": 500,
+    "num_beams": 4,
+    "input_max_length": 2048
+}
