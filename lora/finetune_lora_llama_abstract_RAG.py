@@ -30,14 +30,14 @@ from dataclasses import dataclass, asdict
 class Config:
     output_dir: str = "output"
     checkpoint: str = "meta-llama/Meta-Llama-3.1-8B-Instruct"  # Update to LLaMA 3 checkpoint
-    experiment_name: str = "LLaMA_RAG_lora_lr1e5_epo2_rank8_PLOS_0328"
+    experiment_name: str = "LLaMA_RAG_lora_lr1e5_epo1_rank8_PLOS_0405"
     dataset_name: str = "BioLaySumm/BioLaySumm2025-PLOS"
     max_length: int = 2048
     optim_type: str = "adamw_torch"
     per_device_train_batch_size: int = 1
     gradient_accumulation_steps: int = 4  
     per_device_eval_batch_size: int = 2
-    n_epochs: int = 2
+    n_epochs: int = 1
     freeze_layers: int = 20  # other option 16,20,24
     lr: float = 1e-5
     lora_r: int = 8
@@ -59,8 +59,7 @@ def rag_format_prompt(sample):
     prompt = f"""
     <|begin_of_text|><|start_header_id|>system<|end_header_id|> 
     You are an expert science communicator. Your task is to generate a **clear, accurate, and formal** summary of biomedical research articles.
-    The summary should be **accessible to a general audience** while maintaining scientific rigor.
-    
+    The summary should be **accessible to a general audience** while maintaining scientific rigor.<|eot_id|>
     <|start_header_id|>user<|end_header_id|>
     Title: {sample['title']}  
     Abstract: {sample['abstract']}  
@@ -69,9 +68,9 @@ def rag_format_prompt(sample):
     {sample['retrieved_context']}
 
     Provide a **formal summary** of the article in {summary_word_len}. **Do not include explanations, self-reflections, or additional notes.** 
-    Keep the response strictly to the summary.The output should begin directly with the summary text itself.
+    Keep the response strictly to the summary.The output should begin directly with the summary text itself.<|eot_id|>
     <|start_header_id|>assistant<|end_header_id|>
-    {sample['summary']}
+    {sample['summary']}<|eot_id|>
     """
     return {
         "input_text": prompt,  # Model input (including expected output)
