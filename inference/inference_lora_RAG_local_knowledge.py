@@ -18,7 +18,7 @@ class Config:
     output_dir: str = "output"
     checkpoint: str = "meta-llama/Meta-Llama-3.1-8B-Instruct"  # Update to LLaMA 3 checkpoint
     experiment_name: str = "RAG_main_text_general_retraiever"
-    lora_checkpoint: str = "linf545/LLaMA_RAG_lora_lr1e5_epo3_rank8_PLOS_0328"
+    lora_checkpoint: str = "LLaMA_RAG_lora_lr1e5_epo1_rank8_PLOS_0405"
     dataset_name: str = "BioLaySumm/BioLaySumm2025-PLOS"
     max_new_tokens: int= 800
     num_beams: int= 4
