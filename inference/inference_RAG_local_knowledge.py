@@ -100,7 +100,6 @@ def rag_format_inference_prompt(sample):
     {sample['retrieved_context']}
 
     Provide a **formal summary** of the article in {summary_word_len}. **Do not include explanations, self-reflections, preamble, extra formatting, or additional notes.** 
-    **Avoid repeating any phrases or ideas.**
     Keep the response strictly to the summary. The output should begin directly with the summary text itself.<|eot_id|>
     <|start_header_id|>assistant<|end_header_id|>
     """
