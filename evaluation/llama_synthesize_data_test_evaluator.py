@@ -32,6 +32,22 @@ def prompt_generate_normal_examples(sample):
     }
 
 
+
+def prompt_generate_paraphrase(sample):
+    prompt = f"""<|begin_of_text|><|start_header_id|>system<|end_header_id|> 
+    You are a professional science communicator. Your role is to paraphrase lay summaries with precision, maintaining the original meaning and content without introducing interpretation or additional information.
+
+    <|start_header_id|>user<|end_header_id|>
+    Title: {sample['title']}
+    Summary: {sample['summary']}
+
+    Rephrase the summary in 100–300 words. **Do not include explanations, commentary, or additional remarks.** Keep the response strictly to the summary.
+    <|start_header_id|>assistant<|end_header_id|>
+    """
+    return {
+        "input_text": prompt,  # Model input (including expected output)
+    }
+
 def prompt_generate_bad_relavance(sample):
     prompt = f"""<|begin_of_text|><|start_header_id|>system<|end_header_id|> 
     You are a science communicator. Your task is to provide a summary of biomedical research articles by focusing on general themes and broad scientific context.
@@ -97,11 +113,14 @@ def prompt_generate_bad(sample):
         "input_text": prompt,  # Model input (including expected output)
     }
 
+
+
+
 def generate_output(sample):
     inputs = tokenizer(sample["input_text"], return_tensors="pt",  truncation=True,max_length=1024)
     input_ids = inputs.input_ids.to(model.device)
     attention_mask = inputs.attention_mask.to(model.device) 
-    output_ids = model.generate(input_ids, attention_mask=attention_mask, max_new_tokens=3000,do_sample=False, pad_token_id=tokenizer.eos_token_id)
+    output_ids = model.generate(input_ids, attention_mask=attention_mask, max_new_tokens=3000,do_sample=False,temperature=None,top_p=None, pad_token_id=tokenizer.eos_token_id)
     sample["summary"] = tokenizer.decode(output_ids[0], skip_special_tokens=True)
     sample["summary"] = sample["summary"].replace("poorly written", "")
     return sample
@@ -148,7 +167,13 @@ formatted_bad_factuality = bad_factuality_set.map(prompt_generate_bad_factuality
 generated_bad_factuality = formatted_bad_factuality.map(generate_output)
 generated_bad_factuality.to_parquet("./output/synthesized_data/bad_factuality_summaries.parquet")
 '''
-bad_set = val_set.select(range(20))
-formatted_bad = bad_set.map(prompt_generate_bad, remove_columns=dataset["validation"].column_names)
+val_subset  = val_set.select(range(20))
+formatted_bad = val_subset.map(prompt_generate_bad, remove_columns=dataset["validation"].column_names)
 generated_bad = formatted_bad.map(generate_output)
 generated_bad.to_parquet("./output/synthesized_data/bad_summaries.parquet")
+
+
+val_subset  = val_set.select(range(20))
+formatted_paraphrase = val_subset.map(prompt_generate_paraphrase, remove_columns=dataset["validation"].column_names)
+generated_paraphrase = formatted_paraphrase.map(generate_output)
+generated_paraphrase.to_parquet("./output/synthesized_data/paraphrase_summaries.parquet")

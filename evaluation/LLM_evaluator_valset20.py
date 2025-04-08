@@ -51,11 +51,11 @@ def extract_lay_summary(text):
 correctness_metric = GEval(
     name="BioSumm",
     criteria="""
-    Evaluate the generated lay summary based on the following criteria:
-    1. **Relevance** (Accuracy of Content & Semantic Overlap):  
-    2. **Readability** (Comprehensibility & Fluency, ease of understanding):  
-    3. **Factuality** (Correctness & Faithfulness to Source):  
-    Assign a score for each criterion (1-5) and provide a final overall score.
+    Evaluate the generated lay summary on the following three criteria:
+    1. **Relevance (1-5)**: Does the summary retain all major findings and themes of the source abstract? Score higher if it covers key points, even if phrased differently. Penalize only if essential information is missing or incorrect topics are introduced.
+    2. **Readability (1-5)**: Is the summary easy to understand for a non-expert audience? Consider fluency, sentence structure, and clarity. Avoid penalizing for simplified language unless it introduces confusion.
+    3. **Factuality (1-5)**: Does the summary accurately reflect the scientific claims in the source abstract? Check for hallucinations or misinterpretations, not just omissions.
+    Each criterion should be scored from 1 (poor) to 5 (excellent). Then provide a final **Overall Score
     """,
     evaluation_params=[LLMTestCaseParams.INPUT, LLMTestCaseParams.ACTUAL_OUTPUT, LLMTestCaseParams.EXPECTED_OUTPUT],
     model="gpt-3.5-turbo" ,
