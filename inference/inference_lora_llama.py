@@ -12,9 +12,9 @@ class Config:
     output_dir: str = "output"
     checkpoint: str = "meta-llama/Meta-Llama-3.1-8B-Instruct"  # Update to LLaMA 3 checkpoint
     experiment_name: str = "llama_PLOS_lora_lr1e5_epo3_rank8_PLOS_inference_0330"
-    lora_checkpoint: str = "linf545/LLaMA_lora_lr1e5_epo3_rank8_PLOS_0330"
+    lora_checkpoint: str = "linf545/LLaMA_lora_lr1e5_epo1_rank8_PLOS_0404"
     dataset_name: str = "BioLaySumm/BioLaySumm2025-PLOS"
-    max_new_tokens: int= 3000
+    max_new_tokens: int= 800
     num_beams: int= 4
     input_max_length: int = 2048
     def save(self, path: str):
@@ -36,14 +36,14 @@ def summary_length():
 def format_inference_prompt(sample):
     prompt = f"""<|begin_of_text|><|start_header_id|>system<|end_header_id|> 
     You are an expert science communicator. Your task is to generate a **clear, accurate, and formal** summary of biomedical research articles.
-    The summary should be **accessible to a general audience** while maintaining scientific rigor.
+    The summary should be **accessible to a general audience** while maintaining scientific rigor.<|eot_id|>
 
     <|start_header_id|>user<|end_header_id|>
     Title: {sample['title']}
     Abstract: {sample['abstract']}
 
     Provide a **formal summary** of the article in {summary_word_len}. **Do not include explanations, self-reflections, or additional notes.** 
-    Keep the response strictly to the summary.The output should begin directly with the summary text itself.
+    Keep the response strictly to the summary.The output should begin directly with the summary text itself.<|eot_id|>
     <|start_header_id|>assistant<|end_header_id|>
     """
     return {
@@ -66,8 +66,10 @@ def generate_output(sample):
 
 if __name__ == "__main__":
     config = Config()
+    autoconfig = AutoConfig.from_pretrained(config.checkpoint)
+    autoconfig.rope_scaling = {"type": "linear", "factor": 2.0}  
     config.save("./configfile/inference_%s_config.json"%(config.experiment_name))
-    base_model = AutoModelForCausalLM.from_pretrained(config.checkpoint, config=AutoConfig.from_pretrained(config.checkpoint), torch_dtype="auto", device_map="cuda")
+    base_model = AutoModelForCausalLM.from_pretrained(config.checkpoint, config=autoconfig, torch_dtype="auto", device_map="cuda")
     model = PeftModel.from_pretrained(base_model, config.lora_checkpoint)
     model = model.to("cuda")
     tokenizer = AutoTokenizer.from_pretrained(config.checkpoint)
@@ -82,6 +84,7 @@ if __name__ == "__main__":
         dataset = drop_indices(dataset, plos_drop_dict)
 
     val_set=dataset["validation"]
+    #val_set = val_set.select(range(20))
     #test_set=dataset["test"]
 
     summary_word_len = summary_length()

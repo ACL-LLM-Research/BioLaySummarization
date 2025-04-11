@@ -46,7 +46,7 @@ def extract_lay_summary(text):
         return None 
 
 
-correctness_metric = GEval(
+correctness_metric_old= GEval(
     name="BioSumm",
     criteria="""
     Evaluate the generated lay summary based on the following criteria:
@@ -60,12 +60,27 @@ correctness_metric = GEval(
     #model="gpt-4-turbo" 
 )
 
+correctness_metric = GEval(
+    name="BioSumm",
+    criteria="""
+    Evaluate the generated lay summary on the following three criteria:
+    1. **Relevance (1-5)**: Does the summary retain all major findings and themes of the source abstract? Score higher if it covers key points, even if phrased differently. Penalize only if essential information is missing or incorrect topics are introduced.
+    2. **Readability (1-5)**: Is the summary easy to understand for a non-expert audience? Consider fluency, sentence structure, and clarity. Avoid penalizing for simplified language unless it introduces confusion.
+    3. **Factuality (1-5)**: Does the summary accurately reflect the scientific claims in the source abstract? Check for hallucinations or misinterpretations, not just omissions.
+    Each criterion should be scored from 1 (poor) to 5 (excellent). Then provide a final **Overall Score
+    """,
+    evaluation_params=[LLMTestCaseParams.INPUT, LLMTestCaseParams.ACTUAL_OUTPUT, LLMTestCaseParams.EXPECTED_OUTPUT],
+    model="gpt-3.5-turbo" ,
+    #model="gpt-4-turbo" 
+)
+
 dataset = load_dataset("BioLaySumm/BioLaySumm2025-PLOS")
 dataset = dataset.map(extract_abstract)
 
 
+# 'normal_summaries','bad_factuality_summaries','bad_readability_summaries','bad_relavance_summaries','bad_summaries','paraphrase_summaries'
 
-for f in ['normal_summaries','bad_factuality_summaries','bad_readability_summaries','bad_relavance_summaries']:
+for f in ['normal_summaries','bad_summaries']:
     generated_df=pd.read_parquet("./output/synthesized_data/%s.parquet"%(f))
     generated_df['Generated_LaySummary'] = generated_df['summary'].apply(extract_lay_summary)
     test_cases = []
@@ -79,7 +94,7 @@ for f in ['normal_summaries','bad_factuality_summaries','bad_readability_summari
     # Parse the results
     parsed_results = parse_results(results)
     # Save as CSV file
-    csv_file = "./output/evaluation_results/20250401_synthesized_data_eval/plos_synthesized_evaluation_results_%s.csv"%(f)
+    csv_file = "./output/evaluation_results/20250401_synthesized_data_eval/v2_plos_synthesized_evaluation_results_%s.csv"%(f)
     with open(csv_file, mode="w", newline="", encoding="utf-8") as file:
         writer = csv.DictWriter(file, fieldnames=parsed_results[0].keys())
         writer.writeheader()
