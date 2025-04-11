@@ -58,15 +58,23 @@ dataset = load_dataset('BioLaySumm/BioLaySumm2025-PLOS')
 val_set=dataset["validation"]
 ref_summ=val_set['summary']
 
-all_results = []
+experiments = [
+    'LLaMA_base/PLOS_val_summaries',
+    'LLaMA_lora/PLOS_val_summaries',
+    'llama_RAG_local_knowledge/PLOS_val_summaries',
+    'llama_lora_RAG_local_knowledge/PLOS_val_summaries'
+]
 
-for i in ['LLaMA_base/PLOS_val_summaries','llama_RAG_local_knowledge/PLOS_val_summaries','LLaMA_lora/PLOS_val_summaries','llama_RAG_local_knowledge/PLOS_val_summaries']:
-    generated_df=pd.read_parquet('./output/generated_summaries/%s.parquet'%(i))
-    generated_summ=generated_df['summary'].to_list()
+
+output_dir = './output/evaluation_summary'
+# Process and save each result individually
+for exp in experiments:
+    generated_df = pd.read_parquet(f'./output/generated_summaries/{exp}.parquet')
+    generated_summ = generated_df['summary'].to_list()
     results = evaluate(generated_summ, ref_summ)
-    results['Experiment'] = i # Add model name to track the source
-    all_results.append(results)
+    results['Experiment'] = exp  # Annotate the model
 
-
-results_df = pd.DataFrame(all_results)
-results_df.to_csv('./output/evaluation_summary/evaluation_summary20250403.csv', index=False)
+    # Convert to single-row DataFrame and save
+    result_df = pd.DataFrame([results])
+    output_path = os.path.join(output_dir, f"{exp.replace('/', '_')}_eval20250410.csv")
+    result_df.to_csv(output_path, index=False)
