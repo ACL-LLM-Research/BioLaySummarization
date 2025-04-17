@@ -12,8 +12,10 @@ plt.boxplot(
     [df_paraphrase['BioSumm (GEval)_score'],df_normal['BioSumm (GEval)_score'], df_bad['BioSumm (GEval)_score'], ],
     labels=['Paraphrased ref Summaries','Normal Summaries', 'Bad Summaries'],
 )
-plt.ylabel('GEval Score')
-plt.title('Distribution of GEval Scores of Normal Summaries and Contorol Summaries')
+plt.ylabel('GEval Score', fontsize=14)
+plt.title('')
+plt.xticks(fontsize=14)
+plt.yticks(fontsize=14)
 plt.grid(True)
 plt.savefig('./figures/EDA/boxplot_geval_scores_evaluator_evaluation.png')
 plt.close()

@@ -15,6 +15,7 @@ from huggingface_hub import login
 import re
 from datasets import DatasetDict
 import matplotlib.pyplot as plt
+import statistics
 
 # check toecker length of all data
 def len_article_details():
@@ -23,8 +24,12 @@ def len_article_details():
         token_lengths = [len(tokenizer(i['article'])['input_ids']) for i in dataset[split]]
         max_length = max(token_lengths)
         min_length = min(token_lengths)
+        mean_length = statistics.mean(token_lengths)
+        median_length = statistics.median(token_lengths)
         print('article max length',max_length)
         print('article min length',min_length)
+        print('Article mean length:', mean_length)
+        print('Article median length:', median_length)
         # llama3 context window 128k tokens
         # gemma2 context length of 8192 tokens
         if max_length > 128000:
@@ -41,8 +46,12 @@ def len_abstract():
         token_lengths = [len(tokenizer(i['abstract'])['input_ids']) for i in dataset[split]]
         max_length = max(token_lengths)
         min_length = min(token_lengths)
+        mean_length = statistics.mean(token_lengths)
+        median_length = statistics.median(token_lengths)
         print('abstract max length',max_length)
         print('abstract min length',min_length)
+        print('Article mean length:', mean_length)
+        print('Article median length:', median_length)
         #check very short abstracts
         short_indices = [idx for idx, length in enumerate(token_lengths) if length < 30]
         if len(short_indices) > 0:

@@ -181,7 +181,6 @@ def add_chunks_field(example):
     }
 
 
-
 def retrieve_relevant_chunks(example, k=5):
     chunks = example.get("main_text_chunks", [])
     query = example.get("abstract", "")
