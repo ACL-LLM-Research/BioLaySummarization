@@ -60,7 +60,7 @@ def format_prompt(sample):
     
     <|start_header_id|>user<|end_header_id|>
     Title: {sample['title']}  
-    Abstract: {sample['article']}  
+    Article: {sample['article']}  
 
     Provide a **formal summary** of the article in {summary_word_len}. **Do not include explanations, self-reflections, or additional notes.** 
     Keep the response strictly to the summary.The output should begin directly with the summary text itself.<|eot_id|>
@@ -101,7 +101,7 @@ def tokenize_data(sample):
         "labels": labels  # Should now always be 1D
     }
 
-def len_abstract():
+'''def len_abstract():
     for split in ['train', 'validation', 'test']:
         print(split)
         token_lengths = [len(tokenizer(i['abstract'])['input_ids']) for i in dataset[split]]
@@ -113,7 +113,7 @@ def len_abstract():
         short_indices = [idx for idx, length in enumerate(token_lengths) if length < 30]
         if len(short_indices) > 0:
             print('abstracts with abstracts shorter than 30 tokens, need to check:',len(short_indices))
-            print(short_indices) #may contain parsing issue 
+            print(short_indices) #may contain parsing issue '''
 
 def drop_indices(dataset, drop_dict):
     new_dataset = {}
@@ -226,7 +226,7 @@ if __name__ == "__main__":
     if config.dataset_name == "BioLaySumm/BioLaySumm2025-PLOS":
         plos_drop_dict={'train':[[725, 1939, 4226, 4842, 5991, 6310, 12050, 13498, 14104, 14199, 18921, 21808, 22922]],'validation':[],'test':[]} # drop due to inccorrect abstract
         dataset = drop_indices(dataset, plos_drop_dict)
-    len_abstract()
+    #len_abstract()
 
 
     #test_train = dataset["train"].select(range(50))  # First n samples
