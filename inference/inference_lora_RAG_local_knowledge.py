@@ -15,7 +15,6 @@ from peft import PeftModel
 
 @dataclass
 class Config:
-    selected_set='test' # or 'validation'
     output_dir: str = "output"
     checkpoint: str = "meta-llama/Meta-Llama-3.1-8B-Instruct"  # Update to LLaMA 3 checkpoint
     experiment_name: str = "RAG_main_text_general_retraiever"
@@ -129,7 +128,7 @@ def generate_output(sample):
 
 if __name__ == "__main__":
     config = Config()
-    config.save("./configfile/inference_%s_%s_config.json"%(config.experiment_name,config.selected_set))
+    config.save("./configfile/inference_%s_config.json"%(config.experiment_name))
     dataset = load_dataset(config.dataset_name)
     dataset = dataset.map(extract_abstract)
     dataset = dataset.map(extract_main_text)
@@ -146,15 +145,6 @@ if __name__ == "__main__":
         separators=["\n\n", "\n", ".", "?", "!", " ", ""]
     )
 
-    selected_set = dataset[config.selected_set]
-    chunked_dataset = selected_set.map(add_chunks_field,batched=False)  
-
-
-    embedder = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
-    #chunked_dataset = chunked_dataset.map(retrieve_relevant_chunks)
-    chunked_dataset = chunked_dataset.map(retrieve_relevant_chunks)
-
-    val_set=chunked_dataset
 
     autoconfig = AutoConfig.from_pretrained(config.checkpoint)
     autoconfig .rope_scaling = {"type": "linear", "factor": 2.0}  
@@ -165,15 +155,24 @@ if __name__ == "__main__":
     tokenizer = AutoTokenizer.from_pretrained(config.checkpoint)
     tokenizer.pad_token = tokenizer.eos_token
 
-    summary_word_len = summary_length()
-    formatted_val = val_set.map(rag_format_inference_prompt, remove_columns=dataset[config.selected_set].column_names)
-    print('start to generate output')
-    generated_val = formatted_val.map(generate_output)
-    print('writing outputs')
-    output_path = "./output/generated_summaries/llama_lora_RAG_local_knowledge/%s_%s_summaries.txt" % (config.dataset_name.split('-')[1], config.selected_set)
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
-    with open(output_path, "w", encoding="utf-8") as f:
-        for line in generated_val['summary']:
-            f.write(line + "\n")
-    #generated_val.to_parquet("./output/generated_summaries/llama_lora_RAG_local_knowledge/%s_val_summaries.parquet"%(config.dataset_name.split('-')[1]))
+    for i in ['test', 'validation']:
+        selected_set = dataset[i]
+        chunked_dataset = selected_set.map(add_chunks_field,batched=False)  
+        embedder = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+        #chunked_dataset = chunked_dataset.map(retrieve_relevant_chunks)
+        chunked_dataset = chunked_dataset.map(retrieve_relevant_chunks)
+        val_set=chunked_dataset
+
+        summary_word_len = summary_length()
+        formatted_val = val_set.map(rag_format_inference_prompt, remove_columns=dataset[i].column_names)
+        print('start to generate output')
+        generated_val = formatted_val.map(generate_output)
+        print('writing outputs')
+        output_path = "./output/generated_summaries/llama_lora_RAG_local_knowledge/%s_%s_summaries.txt" % (config.dataset_name.split('-')[1], i)
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+
+        with open(output_path, "w", encoding="utf-8") as f:
+            for line in generated_val['summary']:
+                f.write(line + "\n")
+        #generated_val.to_parquet("./output/generated_summaries/llama_lora_RAG_local_knowledge/%s_val_summaries.parquet"%(config.dataset_name.split('-')[1]))
