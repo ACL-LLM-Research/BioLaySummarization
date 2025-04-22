@@ -16,7 +16,8 @@ from dataclasses import dataclass, asdict
 class Config:
     output_dir: str = "output"
     checkpoint: str = "meta-llama/Meta-Llama-3.1-8B-Instruct"  # Update to LLaMA 3 checkpoint
-    experiment_name: str = "RAG_main_text_general_retraiever"
+    experiment_index: str = '2'
+    #experiment_name: str = "RAG_main_text_general_retraiever_2"
     dataset_name: str = "BioLaySumm/BioLaySumm2025-PLOS"
     max_new_tokens: int= 800
     num_beams: int= 4
@@ -30,10 +31,10 @@ class Config:
             data = json.load(f)
         return Config(**data)
 
-def summary_length():
-    if config.dataset_name == "BioLaySumm/BioLaySumm2025-PLOS":
+def summary_length(dataset_name):
+    if dataset_name == "BioLaySumm/BioLaySumm2025-PLOS":
         return '100-300 words'
-    if config.dataset_name == "BioLaySumm/BioLaySumm2025-eLife":
+    if dataset_name == "BioLaySumm/BioLaySumm2025-eLife":
         return '200-600 words'
 
 
@@ -126,31 +127,12 @@ def generate_output(sample):
 
 if __name__ == "__main__":
     config = Config()
-    config.save("./configfile/inference_%s_config.json"%(config.experiment_name))
-    dataset = load_dataset(config.dataset_name)
-    dataset = dataset.map(extract_abstract)
-    dataset = dataset.map(extract_main_text)
-    dataset.column_names
-
-    if config.dataset_name == "BioLaySumm/BioLaySumm2025-PLOS":
-        plos_drop_dict={'train':[[725, 1939, 4226, 4842, 5991, 6310, 12050, 13498, 14104, 14199, 18921, 21808, 22922]],'validation':[],'test':[]} # drop due to inccorrect abstract
-        dataset = drop_indices(dataset, plos_drop_dict)
-
-
+    config.save("./configfile/inference_experiment_%s_config.json"%(config.experiment_index))
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=500,      # n chararcters
         chunk_overlap=50,    
         separators=["\n\n", "\n", ".", "?", "!", " ", ""]
     )
-
-    chunked_dataset = dataset.map(add_chunks_field,batched=False)  
-
-
-    embedder = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
-    #chunked_dataset = chunked_dataset.map(retrieve_relevant_chunks)
-    chunked_dataset["validation"] = chunked_dataset["validation"].map(retrieve_relevant_chunks)
-
-    val_set=chunked_dataset["validation"]
 
     autoconfig = AutoConfig.from_pretrained(config.checkpoint)
     autoconfig .rope_scaling = {"type": "linear", "factor": 2.0}  
@@ -158,14 +140,36 @@ if __name__ == "__main__":
     tokenizer = AutoTokenizer.from_pretrained(config.checkpoint)
     tokenizer.pad_token = tokenizer.eos_token
 
-    summary_word_len = summary_length()
-    formatted_val = val_set.map(rag_format_inference_prompt, remove_columns=dataset["validation"].column_names)
-    #formatted_test = test_set.map(format_prompt, remove_columns=dataset["test"].column_names)
+    for j in ["BioLaySumm/BioLaySumm2025-PLOS", "BioLaySumm/BioLaySumm2025-eLife"]:
+        dataset = load_dataset(j)
+        #dataset = dataset.select(range(10)) # test only
+        dataset = dataset.map(extract_abstract)
+        dataset = dataset.map(extract_main_text)
+        dataset.column_names
 
-    #test_case = formatted_val.select(range(5))
-    #result=test_case.map(generate_output)
-    #result["summary"]
-    #result.to_parquet("./output/generated_summaries/llama_RAG_local_knowledge/val_summaries.parquet")
-    
-    generated_val = formatted_val.map(generate_output)
-    generated_val.to_parquet("./output/generated_summaries/llama_RAG_local_knowledge/%s_val_summaries.parquet"%(config.dataset_name.split('-')[1]))
+        if config.dataset_name == "BioLaySumm/BioLaySumm2025-PLOS":
+            plos_drop_dict={'train':[[725, 1939, 4226, 4842, 5991, 6310, 12050, 13498, 14104, 14199, 18921, 21808, 22922]],'validation':[],'test':[]} # drop due to inccorrect abstract
+            dataset = drop_indices(dataset, plos_drop_dict)
+
+
+        for i in ['test', 'validation']:
+            selected_set = dataset[i]
+            chunked_dataset = selected_set.map(add_chunks_field,batched=False)  
+            embedder = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+            #chunked_dataset = chunked_dataset.map(retrieve_relevant_chunks)
+            chunked_dataset = chunked_dataset.map(retrieve_relevant_chunks)
+            val_set=chunked_dataset
+
+            summary_word_len = summary_length(j)
+            formatted_val = val_set.map(rag_format_inference_prompt, remove_columns=dataset[i].column_names)
+            print('start to generate output')
+            generated_val = formatted_val.map(generate_output)
+            print('writing outputs')
+            output_path = "./output/generated_summaries/indexed_experiments/experiment%s/%s_%s_summaries.txt" % (config.experiment_index,j.split('-')[1], i)
+            os.makedirs(os.path.dirname(output_path), exist_ok=True)
+            
+            with open(output_path, "w", encoding="utf-8") as f:
+                for line in generated_val['summary']:
+                    f.write(line + "\n")
+            generated_val.to_parquet("./output/generated_summaries/indexed_experiments/experiment%s/%s_%s_check.csv"%(config.experiment_index,j.split('-')[1],i))
+
