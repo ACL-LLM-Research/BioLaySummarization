@@ -18,7 +18,7 @@ class Config:
     checkpoint: str = "meta-llama/Meta-Llama-3.1-8B-Instruct"  # Update to LLaMA 3 checkpoint
     experiment_index: str = '2'
     #experiment_name: str = "RAG_main_text_general_retraiever_2"
-    dataset_name: str = "BioLaySumm/BioLaySumm2025-PLOS"
+    #dataset_name: str = "BioLaySumm/BioLaySumm2025-PLOS"
     max_new_tokens: int= 800
     num_beams: int= 4
     input_max_length: int = 2048
@@ -147,7 +147,7 @@ if __name__ == "__main__":
         dataset = dataset.map(extract_main_text)
         dataset.column_names
 
-        if config.dataset_name == "BioLaySumm/BioLaySumm2025-PLOS":
+        if j == "BioLaySumm/BioLaySumm2025-PLOS":
             plos_drop_dict={'train':[[725, 1939, 4226, 4842, 5991, 6310, 12050, 13498, 14104, 14199, 18921, 21808, 22922]],'validation':[],'test':[]} # drop due to inccorrect abstract
             dataset = drop_indices(dataset, plos_drop_dict)
 
