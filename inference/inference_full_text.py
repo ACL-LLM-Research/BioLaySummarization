@@ -7,6 +7,7 @@ import pandas as pd
 import json
 from dataclasses import dataclass, asdict
 import os 
+import torch
 
 @dataclass
 class Config:
@@ -75,7 +76,9 @@ if __name__ == "__main__":
 
     autoconfig = AutoConfig.from_pretrained(config.checkpoint)
     autoconfig .rope_scaling = {"type": "linear", "factor": 2.0}  
-    model = AutoModelForCausalLM.from_pretrained(config.checkpoint, config=autoconfig, device_map="cuda")
+    model = AutoModelForCausalLM.from_pretrained(config.checkpoint, config=autoconfig, 
+                                                device_map="auto",
+                                                torch_dtype=torch.bfloat16) # bf16 if using H100 
     tokenizer = AutoTokenizer.from_pretrained(config.checkpoint)
     tokenizer.pad_token = tokenizer.eos_token
 

@@ -9,6 +9,7 @@ from transformers import AutoTokenizer, AutoModelForCausalLM, AutoConfig
 import json
 from dataclasses import dataclass, asdict
 from peft import PeftModel
+import torch
 #from langchain_community.retrievers import PubMedRetriever
 #retriever = PubMedRetriever(top_k=3 retmode="json")
 
@@ -138,8 +139,10 @@ if __name__ == "__main__":
     autoconfig = AutoConfig.from_pretrained(config.checkpoint)
     autoconfig .rope_scaling = {"type": "linear", "factor": 2.0}  
     base_model = AutoModelForCausalLM.from_pretrained(config.checkpoint, config=AutoConfig.from_pretrained(config.checkpoint), torch_dtype="auto", device_map="cuda")
-    model = PeftModel.from_pretrained(base_model, config.lora_checkpoint)
-    model = model.to("cuda")
+    model = PeftModel.from_pretrained(base_model, config.lora_checkpoint,
+                                    device_map="auto",
+                                    torch_dtype=torch.bfloat16) # bf16 if using H100 )
+    #model = model.to("cuda")
     tokenizer = AutoTokenizer.from_pretrained(config.checkpoint)
     tokenizer.pad_token = tokenizer.eos_token
 
