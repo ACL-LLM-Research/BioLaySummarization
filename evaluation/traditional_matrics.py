@@ -9,7 +9,6 @@ from datasets import load_dataset
 import nltk
 nltk.download('punkt_tab')
 
-
 def calc_rouge(preds, refs):
   scorer = rouge_scorer.RougeScorer(['rouge1', 'rouge2', 'rougeLsum'], \
                                     use_stemmer=True, split_summaries=True)
