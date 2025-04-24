@@ -7,8 +7,7 @@ import torch
 import pandas as pd
 from datasets import load_dataset
 import nltk
-#nltk.download('punkt_tab')
-nltk.download('punkt')
+nltk.download('punkt_tab')
 
 def calc_rouge(preds, refs):
   scorer = rouge_scorer.RougeScorer(['rouge1', 'rouge2', 'rougeLsum'], \
