@@ -21,6 +21,7 @@ from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores.faiss import FAISS
 import json
 from dataclasses import dataclass, asdict
+import gc
 
 #from torch.amp import GradScaler
 #scaler = GradScaler("cuda")
@@ -30,8 +31,8 @@ from dataclasses import dataclass, asdict
 class Config:
     output_dir: str = "output"
     checkpoint: str = "meta-llama/Meta-Llama-3.1-8B-Instruct"  # Update to LLaMA 3 checkpoint
-    experiment_name: str = "LLaMA_RAG_lora_lr1e5_epo1_rank8_PLOS_0405"
-    dataset_name: str = "BioLaySumm/BioLaySumm2025-PLOS"
+    experiment_name: str = "LLaMA_RAG_lora_lr1e5_epo1_rank8_eLife_0425"
+    dataset_name: str = "BioLaySumm/BioLaySumm2025-eLife"
     max_length: int = 2048
     optim_type: str = "adamw_torch"
     per_device_train_batch_size: int = 1
@@ -196,6 +197,10 @@ def retrieve_relevant_chunks(example, k=5):
     example["retrieved_context"] = retrieved_context
     return example
 
+def free_cuda():
+    gc.collect()
+    torch.cuda.empty_cache()
+    torch.cuda.ipc_collect()
 
 if __name__ == "__main__":
     config = Config()
@@ -236,7 +241,7 @@ if __name__ == "__main__":
     )
 
 
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = torch.device("auto" if torch.cuda.is_available() else "cpu")
 
     model = AutoModelForCausalLM.from_pretrained(
         config.checkpoint,
@@ -342,4 +347,5 @@ if __name__ == "__main__":
         #test loading the model
         #model = PeftModel.from_pretrained(config.checkpoint, "linf545/%s"%(config.experiment_name))
 
-
+    del model, trainer,history,tokenized_train,tokenized_val, formatted_train,formatted_val,train_set, val_set, dataset
+    free_cuda()
