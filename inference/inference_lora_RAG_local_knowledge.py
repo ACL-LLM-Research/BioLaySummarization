@@ -1,15 +1,14 @@
 
 
-import os
 from langchain.embeddings import HuggingFaceEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.vectorstores import FAISS
 from datasets import load_dataset,DatasetDict
 from transformers import AutoTokenizer, AutoModelForCausalLM, AutoConfig
-import json
 from dataclasses import dataclass, asdict
 from peft import PeftModel
-import torch
+import os, gc, torch, json
+
 #from langchain_community.retrievers import PubMedRetriever
 #retriever = PubMedRetriever(top_k=3 retmode="json")
 
@@ -180,7 +179,7 @@ if __name__ == "__main__":
             with open(output_path, "w", encoding="utf-8") as f:
                 for line in generated_val['summary']:
                     f.write(line + "\n")
-            generated_val.to_parquet("./output/generated_summaries/indexed_experiments/experiment%s/%s_%s_check.csv"%(config.experiment_index,j.split('-')[1],i))
+            generated_val.to_csv("./output/generated_summaries/indexed_experiments/experiment%s/%s_%s_check.csv"%(config.experiment_index,j.split('-')[1],i))
             
             del embedder, chunked_dataset, formatted_val, generated_val, selected_set
             free_cuda()
