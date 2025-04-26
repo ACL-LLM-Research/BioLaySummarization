@@ -126,6 +126,10 @@ def generate_output(sample):
     sample["summary"] = summary
     return sample
 
+def free_cuda():
+    gc.collect()
+    torch.cuda.empty_cache()
+    torch.cuda.ipc_collect()
 
 if __name__ == "__main__":
     config = Config()
@@ -177,3 +181,8 @@ if __name__ == "__main__":
                 for line in generated_val['summary']:
                     f.write(line + "\n")
             generated_val.to_parquet("./output/generated_summaries/indexed_experiments/experiment%s/%s_%s_check.csv"%(config.experiment_index,j.split('-')[1],i))
+            
+            del embedder, chunked_dataset, formatted_val, generated_val, selected_set
+            free_cuda()
+    del model, tokenizer, text_splitter
+    free_cuda()
