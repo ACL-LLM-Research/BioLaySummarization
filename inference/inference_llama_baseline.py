@@ -72,7 +72,7 @@ def free_cuda():
 
 if __name__ == "__main__":
     config = Config()
-    config.save("./configfile/inference_%s_config.json"%(config.experiment_name))
+    config.save("./configfile/inference_%s_config.json"%(config.experiment_index))
     #model = PeftModel.from_pretrained(config.checkpoint, "linf545/%s"%(config.experiment_name))
     #model = model.to("cuda")
     #tokenizer = AutoTokenizer.from_pretrained(config.checkpoint)
