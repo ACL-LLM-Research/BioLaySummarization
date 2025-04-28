@@ -1,0 +1,8 @@
+{
+    "output_dir": "output",
+    "checkpoint": "Qwen/Qwen2.5-72B-Instruct",
+    "experiment_index": "7",
+    "max_new_tokens": 800,
+    "num_beams": 4,
+    "input_max_length": 2048
+}

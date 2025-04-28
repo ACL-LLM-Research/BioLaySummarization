@@ -1,0 +1,8 @@
+{
+    "output_dir": "output",
+    "checkpoint": "deepseek-ai/DeepSeek-R1",
+    "experiment_index": "6",
+    "max_new_tokens": 800,
+    "num_beams": 4,
+    "input_max_length": 2048
+}

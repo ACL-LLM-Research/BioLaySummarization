@@ -6,14 +6,14 @@ from transformers import AutoTokenizer, AutoModelForCausalLM, AutoConfig
 import pandas as pd
 import json
 from dataclasses import dataclass, asdict
-import os 
+import os, gc 
 import torch
 
 @dataclass
 class Config:
     output_dir: str = "output"
     checkpoint: str = "meta-llama/Meta-Llama-3.1-8B-Instruct"  # Update to LLaMA 3 checkpoint
-    experiment_index: str = '2'
+    experiment_index: str = '8'
     #experiment_name: str = "LLaMA_base_PLOS_0329"
     #dataset_name: str = "BioLaySumm/BioLaySumm2025-PLOS"
     max_new_tokens: int= 800
@@ -89,7 +89,7 @@ if __name__ == "__main__":
     tokenizer.pad_token = tokenizer.eos_token
 
     for j in ["BioLaySumm/BioLaySumm2025-PLOS", "BioLaySumm/BioLaySumm2025-eLife"]:
-        dataset = load_dataset(config.dataset_name)
+        dataset = load_dataset(j)
         #dataset = dataset.map(extract_abstract)
         dataset.column_names
 
@@ -100,7 +100,7 @@ if __name__ == "__main__":
         for i in ['test', 'validation']:
             val_set=dataset[i]
 
-            summary_word_len = summary_length()
+            summary_word_len = summary_length(j)
             formatted_val = val_set.map(format_inference_prompt, remove_columns=dataset[i].column_names)
             #formatted_test = test_set.map(format_prompt, remove_columns=dataset["test"].column_names)
 
