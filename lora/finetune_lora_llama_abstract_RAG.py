@@ -31,14 +31,18 @@ import gc
 class Config:
     output_dir: str = "output"
     checkpoint: str = "meta-llama/Meta-Llama-3.1-8B-Instruct"  # Update to LLaMA 3 checkpoint
+<<<<<<< HEAD
     experiment_name: str = "LLaMA_RAG_lora_lr1e5_epo1_rank8_eLife_0425"
+=======
+    experiment_name: str = "LLaMA_RAG_lora_lr1e5_epo4_rank8_eLife_0425"
+>>>>>>> e9fecb1db818c5e82bfbe884ff886e7f8df39f9f
     dataset_name: str = "BioLaySumm/BioLaySumm2025-eLife"
     max_length: int = 2048
     optim_type: str = "adamw_torch"
-    per_device_train_batch_size: int = 1
+    per_device_train_batch_size: int = 4
     gradient_accumulation_steps: int = 4  
     per_device_eval_batch_size: int = 2
-    n_epochs: int = 1
+    n_epochs: int = 4
     freeze_layers: int = 20  # other option 16,20,24
     lr: float = 1e-5
     lora_r: int = 8
@@ -241,12 +245,16 @@ if __name__ == "__main__":
     )
 
 
+<<<<<<< HEAD
     device = torch.device("auto" if torch.cuda.is_available() else "cpu")
+=======
+    #device = torch.device("auto" if torch.cuda.is_available() else "cpu")
+>>>>>>> e9fecb1db818c5e82bfbe884ff886e7f8df39f9f
 
     model = AutoModelForCausalLM.from_pretrained(
         config.checkpoint,
-        #device_map="auto",
-    ).to(device)
+        device_map="cuda",
+    )
     model.config.rope_scaling = {"type": "linear", "factor": 2.0}
     model.config.use_cache = False
     model = get_peft_model(model, lora_config)

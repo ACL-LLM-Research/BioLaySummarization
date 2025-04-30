@@ -6,14 +6,14 @@ from transformers import AutoTokenizer, AutoModelForCausalLM, AutoConfig
 import pandas as pd
 import json
 from dataclasses import dataclass, asdict
-import os 
+import os, gc 
 import torch
 
 @dataclass
 class Config:
     output_dir: str = "output"
     checkpoint: str = "meta-llama/Meta-Llama-3.1-8B-Instruct"  # Update to LLaMA 3 checkpoint
-    experiment_index: str = '2'
+    experiment_index: str = '8'
     #experiment_name: str = "LLaMA_base_PLOS_0329"
     #dataset_name: str = "BioLaySumm/BioLaySumm2025-PLOS"
     max_new_tokens: int= 800

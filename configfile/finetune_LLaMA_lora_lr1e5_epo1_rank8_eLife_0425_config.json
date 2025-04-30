@@ -1,0 +1,18 @@
+{
+    "output_dir": "output",
+    "checkpoint": "meta-llama/Meta-Llama-3.1-8B-Instruct",
+    "experiment_name": "LLaMA_lora_lr1e5_epo1_rank8_eLife_0425",
+    "dataset_name": "BioLaySumm/BioLaySumm2025-eLife",
+    "max_length": 2048,
+    "optim_type": "adamw_torch",
+    "per_device_train_batch_size": 4,
+    "gradient_accumulation_steps": 4,
+    "per_device_eval_batch_size": 2,
+    "n_epochs": 1,
+    "freeze_layers": 20,
+    "lr": 1e-05,
+    "lora_r": 8,
+    "lora_alpha": 16,
+    "lora_dropout": 0.1,
+    "lora_bias": "none"
+}
