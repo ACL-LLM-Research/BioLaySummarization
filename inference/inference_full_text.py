@@ -89,7 +89,7 @@ if __name__ == "__main__":
     tokenizer.pad_token = tokenizer.eos_token
 
     for j in ["BioLaySumm/BioLaySumm2025-PLOS", "BioLaySumm/BioLaySumm2025-eLife"]:
-        dataset = load_dataset(config.dataset_name)
+        dataset = load_dataset(j)
         #dataset = dataset.map(extract_abstract)
         dataset.column_names
 
@@ -100,7 +100,7 @@ if __name__ == "__main__":
         for i in ['test', 'validation']:
             val_set=dataset[i]
 
-            summary_word_len = summary_length()
+            summary_word_len = summary_length(j)
             formatted_val = val_set.map(format_inference_prompt, remove_columns=dataset[i].column_names)
             #formatted_test = test_set.map(format_prompt, remove_columns=dataset["test"].column_names)
 
