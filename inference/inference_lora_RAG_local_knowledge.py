@@ -20,7 +20,7 @@ class Config:
     experiment_index: str = '1'
     #experiment_name: str = "RAG_main_text_general_retraiever_experiment_1"
     plos_lora_checkpoint: str = "linf545/LLaMA_RAG_lora_lr1e5_epo1_rank8_PLOS_0405"
-    elife_lora_checkpoint: str = "linf545/LLaMA_lora_lr1e5_epo2_rank8_eLife_0425"
+    elife_lora_checkpoint: str = "linf545/LLaMA_RAG_lora_lr1e5_epo2_rank8_eLife_0425"
     max_new_tokens: int= 800
     num_beams: int= 4
     input_max_length: int = 2048

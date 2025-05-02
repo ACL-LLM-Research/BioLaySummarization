@@ -105,7 +105,6 @@ def rag_format_inference_prompt(sample):
         "input_text": prompt,  # Model input (including expected output)
     }
 
-
 def generate_output(sample):
     inputs = tokenizer(sample["input_text"], return_tensors="pt",  truncation=True,max_length=config.input_max_length)
     input_ids = inputs.input_ids.to(model.device)
