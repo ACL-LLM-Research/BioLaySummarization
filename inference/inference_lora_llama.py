@@ -77,7 +77,7 @@ if __name__ == "__main__":
     config = Config()
     autoconfig = AutoConfig.from_pretrained(config.checkpoint)
     autoconfig.rope_scaling = {"type": "linear", "factor": 2.0}  
-    config.save("./configfile/inference_%s_config.json"%(config.experiment_name))
+    config.save("./configfile/inference_experiment_%s_config.json"%(config.experiment_index))
     base_model = AutoModelForCausalLM.from_pretrained(config.checkpoint, config=autoconfig, torch_dtype="auto", device_map="cuda")
 
     tokenizer = AutoTokenizer.from_pretrained(config.checkpoint)

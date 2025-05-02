@@ -18,7 +18,7 @@ class Config:
     #dataset_name: str = "BioLaySumm/BioLaySumm2025-PLOS"
     max_new_tokens: int= 800
     num_beams: int= 4
-    input_max_length: int = 2048
+    input_max_length: int = 40000
     def save(self, path: str):
           with open(path, "w") as f:
             json.dump(asdict(self), f, indent=4)
