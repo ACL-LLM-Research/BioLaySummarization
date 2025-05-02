@@ -19,7 +19,8 @@ class Config:
     checkpoint: str = "meta-llama/Meta-Llama-3.1-8B-Instruct"  
     experiment_index: str = '1'
     #experiment_name: str = "RAG_main_text_general_retraiever_experiment_1"
-    lora_checkpoint: str = "linf545/LLaMA_RAG_lora_lr1e5_epo1_rank8_PLOS_0405"
+    plos_lora_checkpoint: str = "linf545/LLaMA_RAG_lora_lr1e5_epo1_rank8_PLOS_0405"
+    elife_lora_checkpoint: str = "linf545/LLaMA_lora_lr1e5_epo2_rank8_eLife_0425"
     max_new_tokens: int= 800
     num_beams: int= 4
     input_max_length: int = 2048
@@ -142,14 +143,20 @@ if __name__ == "__main__":
     autoconfig = AutoConfig.from_pretrained(config.checkpoint)
     autoconfig .rope_scaling = {"type": "linear", "factor": 2.0}  
     base_model = AutoModelForCausalLM.from_pretrained(config.checkpoint, config=AutoConfig.from_pretrained(config.checkpoint), torch_dtype="auto", device_map="cuda")
-    model = PeftModel.from_pretrained(base_model, config.lora_checkpoint,
-                                    device_map="auto",
-                                    torch_dtype=torch.bfloat16) # bf16 if using H100 )
+    
     #model = model.to("cuda")
     tokenizer = AutoTokenizer.from_pretrained(config.checkpoint)
     tokenizer.pad_token = tokenizer.eos_token
 
     for j in ["BioLaySumm/BioLaySumm2025-PLOS", "BioLaySumm/BioLaySumm2025-eLife"]:
+        if j== "BioLaySumm/BioLaySumm2025-PLOS":
+            lora_weights= config.plos_lora_checkpoint
+        else: 
+            lora_weights= config.elife_lora_checkpoint
+
+        model = PeftModel.from_pretrained(base_model, lora_weights,
+                                            device_map="auto",
+                                            torch_dtype=torch.bfloat16) # bf16 if using H100 )
         dataset = load_dataset(j)
         #dataset = dataset.select(range(10)) # test only
         dataset = dataset.map(extract_abstract)
@@ -183,5 +190,7 @@ if __name__ == "__main__":
             
             del embedder, chunked_dataset, formatted_val, generated_val, selected_set
             free_cuda()
-    del model, tokenizer, text_splitter
+        del model,dataset
+        free_cuda()
+    del tokenizer, text_splitter,base_model
     free_cuda()
