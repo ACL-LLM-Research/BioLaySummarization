@@ -105,6 +105,47 @@ def rag_format_inference_prompt(sample):
         "input_text": prompt,  # Model input (including expected output)
     }
 
+def rag_format_inference_prompt2(sample): # better readablity 
+    prompt = f"""<|begin_of_text|><|start_header_id|>system<|end_header_id|> 
+    You are an expert science communicator. Your task is to generate a **clear, accurate, and formal** summary of biomedical research articles.
+    The summary should be **accessible to a general audience** using plain language, short sentences, and avoiding technical jargon where possible, while maintaining scientific accuracy.<|eot_id|>
+    <|start_header_id|>user<|end_header_id|>
+    Title: {sample['title']}
+    Abstract: {sample['abstract']}
+
+    Supporting Text:
+    {sample['retrieved_context']}
+
+    Provide a **formal summary** of the article in {summary_word_len}. **Do not include explanations, self-reflections, preamble, extra formatting, or additional notes.** 
+    Keep the response strictly to the summary. The output should begin directly with the summary text itself.<|eot_id|>
+    <|start_header_id|>assistant<|end_header_id|>
+    """
+    return {
+        "input_text": prompt,  # Model input (including expected output)
+    }
+
+def rag_format_inference_prompt3(sample): # high readablity, may sacrifices scientific accuracy.
+    prompt = f"""<|begin_of_text|><|start_header_id|>system<|end_header_id|> 
+    You are an expert science communicator. Your task is to generate a **clear, accurate, and formal** summary of biomedical research articles.
+    The summary should be **accessible to a general audience** Use simple sentence structures, common words, and avoid long or complex clauses. 
+    Aim for a tone similar to science communication articles in outlets like Scientific American or NIH press releases.<|eot_id|>
+    <|start_header_id|>user<|end_header_id|>
+    Title: {sample['title']}
+    Abstract: {sample['abstract']}
+
+    Supporting Text:
+    {sample['retrieved_context']}
+
+    Provide a **formal summary** of the article in {summary_word_len}. **Do not include explanations, self-reflections, preamble, extra formatting, or additional notes.** 
+    Keep the response strictly to the summary. The output should begin directly with the summary text itself.<|eot_id|>
+    <|start_header_id|>assistant<|end_header_id|>
+    """
+    return {
+        "input_text": prompt,  # Model input (including expected output)
+    }
+
+
+
 def generate_output(sample):
     inputs = tokenizer(sample["input_text"], return_tensors="pt",  truncation=True,max_length=config.input_max_length)
     input_ids = inputs.input_ids.to(model.device)
