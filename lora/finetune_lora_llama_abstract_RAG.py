@@ -33,7 +33,7 @@ class Config:
     checkpoint: str = "meta-llama/Meta-Llama-3.1-8B-Instruct"  # Update to LLaMA 3 checkpoint
     experiment_name: str = "LLaMA_RAG_lora_lr1e5_epo4_rank8_eLife_0425"
     dataset_name: str = "BioLaySumm/BioLaySumm2025-eLife"
-    max_length: int = 2048
+    max_length: int = 100000
     optim_type: str = "adamw_torch"
     per_device_train_batch_size: int = 4
     gradient_accumulation_steps: int = 4  
@@ -76,6 +76,70 @@ def rag_format_prompt(sample):
     return {
         "input_text": prompt,  # Model input (including expected output)
     }
+
+
+
+def rag_format_inference_prompt2(sample): # better readablity 
+    prompt = f"""<|begin_of_text|><|start_header_id|>system<|end_header_id|> 
+    You are an expert science communicator. Your task is to generate a **clear, accurate, and formal** summary of biomedical research articles.
+    The summary should be **accessible to a general audience** using plain language, short sentences, and avoiding technical jargon where possible, while maintaining scientific accuracy.<|eot_id|>
+    <|start_header_id|>user<|end_header_id|>
+    Title: {sample['title']}
+    Abstract: {sample['abstract']}
+
+    Supporting Text:
+    {sample['retrieved_context']}
+
+    Provide a **formal summary** of the article in {summary_word_len}. **Do not include explanations, self-reflections, preamble, extra formatting, or additional notes.** 
+    Keep the response strictly to the summary. The output should begin directly with the summary text itself.<|eot_id|>
+    <|start_header_id|>assistant<|end_header_id|>
+    """
+    return {
+        "input_text": prompt,  # Model input (including expected output)
+    }
+
+def rag_format_inference_prompt3(sample): # high readablity, may sacrifices scientific accuracy.
+    prompt = f"""<|begin_of_text|><|start_header_id|>system<|end_header_id|> 
+    You are an expert science communicator. Your task is to generate a **clear, accurate, and formal** summary of biomedical research articles.
+    The summary should be **accessible to a general audience** Use simple sentence structures, common words, and avoid long or complex clauses. 
+    Aim for a tone similar to science communication articles in outlets like Scientific American or NIH press releases.<|eot_id|>
+    <|start_header_id|>user<|end_header_id|>
+    Title: {sample['title']}
+    Abstract: {sample['abstract']}
+
+    Supporting Text:
+    {sample['retrieved_context']}
+
+    Provide a **formal summary** of the article in {summary_word_len}. **Do not include explanations, self-reflections, preamble, extra formatting, or additional notes.** 
+    Keep the response strictly to the summary. The output should begin directly with the summary text itself.<|eot_id|>
+    <|start_header_id|>assistant<|end_header_id|>
+    """
+    return {
+        "input_text": prompt,  # Model input (including expected output)
+    }
+
+
+def rag_format_inference_prompt4(sample): # high readablity, may sacrifices scientific accuracy.
+    prompt = f"""<|begin_of_text|><|start_header_id|>system<|end_header_id|> 
+    You are an expert science communicator. Your task is to generate a summary of biomedical research articles.
+    The summary should be **accessible to a general audience** Use simple sentence structures, common words, and avoid long or complex clauses. 
+    Aim for a tone similar to science communication articles in outlets like Scientific American.<|eot_id|>
+    <|start_header_id|>user<|end_header_id|>
+    Title: {sample['title']}
+    Abstract: {sample['abstract']}
+
+    Supporting Text:
+    {sample['retrieved_context']}
+
+    Provide a **formal summary** of the article in {summary_word_len}. **Do not include explanations, self-reflections, preamble, extra formatting, or additional notes.** 
+    Keep the response strictly to the summary. The output should begin directly with the summary text itself.<|eot_id|>
+    <|start_header_id|>assistant<|end_header_id|>
+    """
+    return {
+        "input_text": prompt,  # Model input (including expected output)
+    }
+
+
 
 def summary_length():
     if config.dataset_name == "BioLaySumm/BioLaySumm2025-PLOS":
