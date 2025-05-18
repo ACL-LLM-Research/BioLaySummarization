@@ -1,0 +1,7 @@
+calculating scores...
+computing bert embedding.
+computing greedy matching.
+done in 0.60 seconds, 16.68 sentences/sec
+Using device: cuda:0
+model_type not provided, defaulting to radgraph-xl
+{'ROUGE': 0.34845693090745017, 'BLEU': 9.817726461213699, 'METEOR': 0.32269931923231737, 'BERTScore': 0.8550441682338714, 'FKGL': 16.53747917213024, 'DCRS': 13.554983639373896, 'CLI': 16.39198677537802, 'similarity': 0.9155156, 'f1chexbert': 0.8, 'radgraph': 0.15655065847253205}
