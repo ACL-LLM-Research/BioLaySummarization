@@ -1,7 +1,7 @@
 calculating scores...
 computing bert embedding.
 computing greedy matching.
-done in 0.60 seconds, 16.72 sentences/sec
-Using device: cuda:0
-model_type not provided, defaulting to radgraph-xl
-{'ROUGE': 0.32398565676586905, 'BLEU': 7.35310892091453, 'METEOR': 0.34533939813532705, 'BERTScore': 0.8400248944759369, 'FKGL': 18.127661160616388, 'DCRS': 13.974504398275684, 'CLI': 17.241905190744575, 'similarity': 0.9216181, 'f1chexbert': 0.9, 'radgraph': 0.14941342335714167}
+done in 0.61 seconds, 16.31 sentences/sec
+Using LENS with topk=3
+<All keys matched successfully>
+{'ROUGE': 0.32398565676586905, 'BLEU': 7.35310892091453, 'METEOR': 0.34533939813532705, 'BERTScore': 0.8400248944759369, 'FKGL': 18.127661160616388, 'DCRS': 13.974504398275684, 'CLI': 17.241905190744575, 'AlignScore': 0.4353178858757019, 'LENS': 50.692058631328756, 'SummaC': 0.5477312982082367}
