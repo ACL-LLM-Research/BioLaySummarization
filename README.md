@@ -89,8 +89,10 @@ If you encounter issues:
 ---
 
 ## 🤝 **Citation**
+
 Our system paper has been accepted for presentation at the 24th Workshop on Biomedical Natural Language Processing (BioNLP) at ACL 2025. 
 The formal publication will be released on the ACL Anthology: https://aclanthology.org/
+
 ---
 
 ## 🤝 **Contributing**
