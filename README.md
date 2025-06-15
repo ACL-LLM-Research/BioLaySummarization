@@ -27,45 +27,44 @@ pip install -r requirements.txt
 
 ## 🚀 **Run the Project**
 
-### **Train the Model**
-```bash
-python train.py --dataset data/bio_papers.json --epochs 5
-```
-This will train the model using the provided biomedical dataset and save the best model checkpoint.
 
 ### **Finetune the Model**
 
-
 ```bash
-python ./lora/finetune-lora.py --lora_alpha 32 --lora_r 16
+python ./lora/finetune_lora_llama_abstract_RAG.py 
 ```
+Settings can be adjusted in the configuration class defined in the .py file
 
 ### **Evaluate the Model**
-```bash
-python evaluate.py --model models/best_model.pth --dataset data/bio_test.json
-```
-This will load the trained model and evaluate its performance on a test dataset.
+We used the evaluation script provided in the following repository to assess performance on the validation set: https://github.com/gowitheflow-1998/BioLaySumm2025.git
 
 ### **Run Inference**
 To generate lay summaries for new biomedical papers:
 ```bash
-python predict.py --input sample_paper.txt
+python ./inference/inference_lora_RAG_local_knowledge.py
 ```
+Settings can be adjusted in the configuration class defined in the .py file
 
 ---
 
 ## 🛠 **Project Structure**
 ```
-├── data/               # Dataset files (raw & processed)
-├── models/             # Saved model checkpoints
-├── src/
-│   ├── preprocess.py   # Data preprocessing functions
-│   ├── train.py        # Model training script
-│   ├── evaluate.py     # Model evaluation script
-│   ├── predict.py      # Inference script for summarization
-├── notebooks/          # Jupyter notebooks for experiments
-├── requirements.txt    # Required dependencies
-├── README.md           # Project documentation
+├── EDA/                        # Summary statistics and exploratory data analysis of the dataset  
+├── configfile/                # Configuration files for specific experiments  
+├── models/                    # Saved model checkpoints  
+├── evaluation/                # Scripts for evaluation on the validation set  
+├── figures/                   # Figures used for publication and intermediate visualizations  
+├── inference/                 # Scripts for model inference  
+├── lora/                      # Scripts for LoRA fine-tuning  
+├── output/                    # Output directory for experiment results  
+│   ├── evaluation_results/           # Evaluation results using G-Eval  
+│   ├── generated_summaries/          # Generated summaries from various experiments  
+│   ├── synthesized_data/             # Synthesized data used in G-Eval assessments  
+│   ├── validationset_evaluation/     # Performance metrics on the validation set  
+│   └── aggregated_scores.csv         # Aggregated validation performance scores across experiments  
+├── biolaysumm2025_exp_design.xlsx   # Index of experiments and configuration settings  
+├── requirements.txt           # Project dependencies  
+├── README.md                   
 ```
 
 ---
