@@ -13,7 +13,7 @@ import json
 import pandas as pd
 import re
 
-os.environ["OPENAI_API_KEY"] ='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'
+os.environ["OPENAI_API_KEY"] ='XXXXXXXXXXXXXXXx'
 
 
 def extract_abstract(example):

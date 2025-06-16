@@ -24,7 +24,7 @@ from dataclasses import dataclass, asdict
 
 @dataclass
 class Config:
-    HF_token="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"
+    HF_token="XXXXXXXX"
     output_dir: str = "output"
     checkpoint: str = "meta-llama/Meta-Llama-3.1-8B-Instruct"  # can also try other models
     experiment_name: str = "LLaMA_lora_lr1e5_epo1_rank8_PLOS_fulltext_0418"

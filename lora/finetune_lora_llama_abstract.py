@@ -287,7 +287,7 @@ if __name__ == "__main__":
     #peak_memory = torch.cuda.max_memory_allocated() / (1024 ** 3)  # Convert bytes to GB
     #print(f"Peak GPU memory usage: {peak_memory:.2f} GB")
 
-    login(token="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")
+    login(token="XXXXXXXXXXXXXx")
     model.push_to_hub("linf545/%s"%(config.experiment_name))
 
         #test loading the model

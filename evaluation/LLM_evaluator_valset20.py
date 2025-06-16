@@ -13,7 +13,7 @@ import sys
 
 #usage python ./evaluation/LLM_evaluator_valset20.py LLaMA_base PLOS_val_summaries
 
-os.environ["OPENAI_API_KEY"] ='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'
+os.environ["OPENAI_API_KEY"] ='XXXXXXXXXXXX'
 
 def extract_abstract(example):
     example["abstract"] = example["article"].split("\n")[0]  # Extract text before first newline, which is the abstract

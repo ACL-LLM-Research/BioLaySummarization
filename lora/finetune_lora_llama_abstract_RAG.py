@@ -304,12 +304,7 @@ if __name__ == "__main__":
         task_type=TaskType.CAUSAL_LM,  # Task type for text generation
     )
 
-
-<<<<<<< HEAD
     device = torch.device("auto" if torch.cuda.is_available() else "cpu")
-=======
-    #device = torch.device("auto" if torch.cuda.is_available() else "cpu")
->>>>>>> e9fecb1db818c5e82bfbe884ff886e7f8df39f9f
 
     model = AutoModelForCausalLM.from_pretrained(
         config.checkpoint,
@@ -409,7 +404,7 @@ if __name__ == "__main__":
     #peak_memory = torch.cuda.max_memory_allocated() / (1024 ** 3)  # Convert bytes to GB
     #print(f"Peak GPU memory usage: {peak_memory:.2f} GB")
 
-    login(token="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")
+    login(token="XXXX")
     model.push_to_hub("linf545/%s"%(config.experiment_name))
 
         #test loading the model
